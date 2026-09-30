@@ -1,3 +1,4 @@
+
 # Sistema Web para la Automatización y Seguimiento de Trámites de Titulación
 
 Sistema diseñado para gestionar, automatizar y dar seguimiento a los procesos de titulación de los estudiantes universitarios.
@@ -16,3 +17,5 @@ El sistema incluye una estructura relacional completa para PostgreSQL ubicada en
 ```bash
 docker compose up -d
 ```
+=======
+Sistema Web para la Automatización y Seguimiento de Trámites de Titulación para la uleam
