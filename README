@@ -1,1 +1,18 @@
-Sistema Web para la Automatización y Seguimiento de Trámites de Titulación
+# Sistema Web para la Automatización y Seguimiento de Trámites de Titulación
+
+Sistema diseñado para gestionar, automatizar y dar seguimiento a los procesos de titulación de los estudiantes universitarios.
+
+---
+
+## 🗄️ Base de Datos (PostgreSQL)
+
+El sistema incluye una estructura relacional completa para PostgreSQL ubicada en `database/`:
+- **Esquema relacional (`schema.sql`)**: Tablas para usuarios, roles, estudiantes, asesores, proyectos de tesis, trámites, etapas y documentos.
+- **Datos iniciales (`seed.sql`)**: Roles y usuario administrador por defecto.
+- **Conexión (`connection.js`)**: Módulo en Node.js para la conexión con `pg`.
+- **Docker Compose (`docker-compose.yml`)**: Configuración rápida para levantar PostgreSQL con carga automática de esquemas.
+
+### Levantamiento rápido con Docker:
+```bash
+docker compose up -d
+```
