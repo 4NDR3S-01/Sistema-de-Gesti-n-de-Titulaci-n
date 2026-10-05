@@ -4,6 +4,7 @@
 -- ========================================================
 
 -- Limpieza opcional (descomentar si se desea reiniciar el esquema)
+-- DROP VIEW IF EXISTS vw_student_titling_summary CASCADE;
 -- DROP TABLE IF EXISTS documents CASCADE;
 -- DROP TABLE IF EXISTS procedure_stages CASCADE;
 -- DROP TABLE IF EXISTS procedures CASCADE;
@@ -12,6 +13,7 @@
 -- DROP TABLE IF EXISTS students CASCADE;
 -- DROP TABLE IF EXISTS users CASCADE;
 -- DROP TABLE IF EXISTS roles CASCADE;
+-- DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 
 -- 1. Tabla de Roles
 CREATE TABLE IF NOT EXISTS roles (
@@ -101,7 +103,71 @@ CREATE TABLE IF NOT EXISTS documents (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Índices para optimizar consultas frecuentes
+-- ========================================================
+-- TRIGGERS Y FUNCIONES AUTOMÁTICAS
+-- ========================================================
+
+-- Función para actualizar automáticamente el campo updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Trigger para users
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+CREATE TRIGGER update_users_updated_at
+    BEFORE UPDATE ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Trigger para projects_theses
+DROP TRIGGER IF EXISTS update_projects_theses_updated_at ON projects_theses;
+CREATE TRIGGER update_projects_theses_updated_at
+    BEFORE UPDATE ON projects_theses
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Trigger para procedures
+DROP TRIGGER IF EXISTS update_procedures_updated_at ON procedures;
+CREATE TRIGGER update_procedures_updated_at
+    BEFORE UPDATE ON procedures
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- ========================================================
+-- VISTAS ÚTILES PARA REPORTES Y CONSULTAS
+-- ========================================================
+
+-- Vista resumen de estudiantes, proyectos y trámites de titulación
+CREATE OR REPLACE VIEW vw_student_titling_summary AS
+SELECT 
+    s.id AS student_id,
+    u.name || ' ' || u.lastname AS student_name,
+    u.email AS student_email,
+    s.student_code,
+    s.faculty,
+    s.career,
+    p.id AS project_id,
+    p.title AS project_title,
+    p.status AS project_status,
+    adv_u.name || ' ' || adv_u.lastname AS advisor_name,
+    proc.id AS procedure_id,
+    proc.procedure_type,
+    proc.current_stage AS procedure_stage,
+    proc.status AS procedure_status
+FROM students s
+JOIN users u ON s.user_id = u.id
+LEFT JOIN projects_theses p ON s.id = p.student_id
+LEFT JOIN advisors adv ON p.advisor_id = adv.id
+LEFT JOIN users adv_u ON adv.user_id = adv_u.id
+LEFT JOIN procedures proc ON s.id = proc.student_id;
+
+-- ========================================================
+-- ÍNDICES PARA OPTIMIZAR CONSULTAS FRECUENTES
+-- ========================================================
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_students_code ON students(student_code);
 CREATE INDEX IF NOT EXISTS idx_procedures_student ON procedures(student_id);
