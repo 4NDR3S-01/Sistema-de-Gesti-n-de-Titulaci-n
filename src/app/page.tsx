@@ -1,16 +1,55 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const demoEnabled = process.env.NEXT_PUBLIC_DEMO_AUTH_ENABLED === "true";
+  const microsoftEnabled =
+    process.env.NEXT_PUBLIC_MICROSOFT_ENABLED === "true";
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage(
-      "La pantalla está lista. El acceso se habilitará al conectar el servicio de autenticación.",
-    );
+    setMessage("");
+    setIsSubmitting(true);
+
+    const formData = new FormData(event.currentTarget);
+    try {
+      const result = await signIn("credentials", {
+        email: formData.get("email"),
+        password: formData.get("password"),
+        redirect: false,
+        redirectTo: "/panel",
+      });
+
+      if (result?.error || !result?.url) {
+        setMessage("Correo o contraseña incorrectos. Verifica e intenta de nuevo.");
+        return;
+      }
+
+      router.push(result.url);
+      router.refresh();
+    } catch {
+      setMessage("No se pudo conectar con el servicio de acceso. Intenta de nuevo.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleMicrosoftSignIn() {
+    setMessage("");
+    setIsSubmitting(true);
+    try {
+      await signIn("microsoft-entra-id", { redirectTo: "/panel" });
+    } catch {
+      setMessage("No se pudo iniciar el acceso con Microsoft. Intenta de nuevo.");
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -74,9 +113,10 @@ export default function Home() {
               id="email"
               name="email"
               type="email"
-              placeholder="nombre@institucion.edu"
+              placeholder="usuario@pruebas.test"
               autoComplete="username"
               required
+              disabled={isSubmitting}
             />
 
             <label className="password-label" htmlFor="password">
@@ -90,6 +130,7 @@ export default function Home() {
                 placeholder="Ingresa tu contraseña"
                 autoComplete="current-password"
                 required
+                disabled={isSubmitting}
               />
               <button
                 type="button"
@@ -101,13 +142,37 @@ export default function Home() {
               </button>
             </div>
 
-            <button className="submit-button" type="submit">
-              Ingresar <span aria-hidden="true">→</span>
+            <button className="submit-button" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Verificando…" : "Ingresar"}{" "}
+              <span aria-hidden="true">→</span>
             </button>
             <p className="form-message" role="status" aria-live="polite">
               {message}
             </p>
           </form>
+
+          {microsoftEnabled ? (
+            <button
+              className="microsoft-button"
+              type="button"
+              disabled={isSubmitting}
+              onClick={handleMicrosoftSignIn}
+            >
+              Continuar con Microsoft institucional
+            </button>
+          ) : (
+            <p className="microsoft-note">
+              El acceso institucional de Microsoft se habilitará cuando la
+              universidad proporcione la configuración de su aplicación.
+            </p>
+          )}
+
+          {demoEnabled && (
+            <p className="demo-note">
+              Modo de prueba: utiliza una de las cuentas locales de estudiante,
+              secretaría o administración. No uses tu correo institucional.
+            </p>
+          )}
 
           <p className="help-note">
             ¿Tienes inconvenientes para ingresar?
