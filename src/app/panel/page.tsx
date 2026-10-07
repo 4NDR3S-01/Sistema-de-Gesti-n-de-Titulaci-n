@@ -11,19 +11,19 @@ export default async function PanelPage() {
 
   const studentSections = [
     {
-      title: "Registro de tema PAP 2",
+      title: "Registro de tema PAT 2",
       description:
         "Registra tu modalidad, tema y problemática de titulación.",
-      href: "/registro-pap2",
+      href: "/registro-pat-2",
       action: "Registrar tema",
     },
   ];
   const secretarySections = [
     {
-      title: "Aprobación de PAP 2",
+      title: "Aprobación de PAT 2",
       description:
         "Revisa las propuestas de los estudiantes y gestiona su aprobación.",
-      href: "/aprobacion-pap2",
+      href: "/aprobacion-pat-2",
       action: "Revisar solicitudes",
     },
     {
@@ -59,7 +59,7 @@ export default async function PanelPage() {
         <p className="dashboard-intro">
           Has iniciado sesión como <strong>{getRoleLabel(role)}</strong>.
           {role === "STUDENT"
-            ? " Desde aquí puedes registrar tu tema de PAP 2."
+            ? " Desde aquí puedes registrar tu tema de PAT 2."
             : " Selecciona una sección para continuar."}
         </p>
         <div className="dashboard-cards">

@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { getRoleLabel } from "@/lib/auth-roles";
 import { WorkflowNavigation } from "@/components/workflow-navigation";
 
-export default async function PapApprovalPage() {
+export default async function PatApprovalPage() {
   const session = await auth();
   const role = session?.user?.role;
   if (role !== "SECRETARY" && role !== "ADMIN") {
@@ -24,7 +24,7 @@ export default async function PapApprovalPage() {
         <Link className="back-link" href="/panel">← Volver al panel</Link>
         <div className="workflow-title-row">
           <div>
-            <span className="workflow-eyebrow">REVISIÓN ACADÉMICA · PAP 2</span>
+            <span className="workflow-eyebrow">REVISIÓN ACADÉMICA · PAT 2</span>
             <h1>Aprobación de temas</h1>
             <p>
               Bandeja de revisión de las propuestas registradas por los

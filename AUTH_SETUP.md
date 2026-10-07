@@ -14,7 +14,7 @@ El proveedor de contraseña solo acepta usuarios cuando `NODE_ENV=development` y
 Las cuentas de prueba tienen estos perfiles:
 
 - `STUDENT`: puede acceder al registro de modalidad y tema.
-- `SECRETARY`: puede acceder a la bandeja de aprobación PAP 2 y preparar convocatorias/tribunales; no puede crear registros PAP 2 de estudiante.
+- `SECRETARY`: puede acceder a la bandeja de aprobación PAT 2 y preparar convocatorias/tribunales; no puede crear registros PAT 2 de estudiante.
 - `ADMIN`: puede acceder a las tres secciones: registro, aprobación y tribunales.
 
 ## Microsoft institucional
@@ -32,8 +32,8 @@ Solicitar a la universidad el tenant ID, client ID, client secret y confirmació
 ## Rutas protegidas
 
 - `/panel`: panel según el perfil autenticado.
-- `/registro-pap2`: solo `STUDENT` y `ADMIN`.
-- `/aprobacion-pap2`: solo `SECRETARY` y `ADMIN`.
+- `/registro-pat-2`: solo `STUDENT` y `ADMIN`.
+- `/aprobacion-pat-2`: solo `SECRETARY` y `ADMIN`.
 - `/tribunales`: requiere perfil `SECRETARY` o `ADMIN`.
 
-El registro PAP 2 y el borrador de tribunal aún no persisten en PostgreSQL. La bandeja de aprobación está preparada como pantalla, pero no puede mostrar, aprobar o devolver propuestas hasta implementar el almacenamiento y los endpoints que repitan estas comprobaciones de rol en el servidor.
+El registro PAT 2 y el borrador de tribunal aún no persisten en PostgreSQL. La bandeja de aprobación está preparada como pantalla, pero no puede mostrar, aprobar o devolver propuestas hasta implementar el almacenamiento y los endpoints que repitan estas comprobaciones de rol en el servidor.

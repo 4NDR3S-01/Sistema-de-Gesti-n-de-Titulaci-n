@@ -14,9 +14,9 @@ export function WorkflowNavigation() {
   return (
     <div className="workflow-header-actions">
       <nav className="workflow-nav" aria-label="Secciones disponibles">
-        {role !== "SECRETARY" && <Link href="/registro-pap2">Registro PAP 2</Link>}
+        {role !== "SECRETARY" && <Link href="/registro-pat-2">Registro PAT 2</Link>}
         {(role === "SECRETARY" || role === "ADMIN") && (
-          <Link href="/aprobacion-pap2">Aprobación PAP 2</Link>
+          <Link href="/aprobacion-pat-2">Aprobación PAT 2</Link>
         )}
         {(role === "SECRETARY" || role === "ADMIN") && (
           <Link href="/tribunales">Tribunales</Link>

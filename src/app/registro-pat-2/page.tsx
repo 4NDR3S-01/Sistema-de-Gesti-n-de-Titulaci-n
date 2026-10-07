@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { WorkflowNavigation } from "@/components/workflow-navigation";
 
-export default function PapRegistrationPage() {
+export default function PatRegistrationPage() {
   const [message, setMessage] = useState("");
   const [articulations, setArticulations] = useState<string[]>([]);
 

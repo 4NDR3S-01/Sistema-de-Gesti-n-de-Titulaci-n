@@ -82,7 +82,7 @@ export default function Home() {
             <span> paso a paso.</span>
           </h1>
           <p>
-            Un espacio para dar seguimiento a tu PAP 2, revisar los avances del
+            Un espacio para dar seguimiento a tu PAT 2, revisar los avances del
             trámite y consultar la asignación de tribunales.
           </p>
         </div>
@@ -91,7 +91,7 @@ export default function Home() {
           <span className="card-eyebrow">TU RUTA</span>
           <h2 id="process-title">Un proceso más claro</h2>
           <ol>
-            <li><span>01</span> Registro del PAP 2</li>
+            <li><span>01</span> Registro del PAT 2</li>
             <li><span>02</span> Revisión del expediente</li>
             <li><span>03</span> Asignación de tribunal</li>
           </ol>

@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Inicio de sesión | Gestión de Titulación",
   description:
-    "Acceso al sistema de gestión de trámites de titulación y seguimiento del PAP 2.",
+    "Acceso al sistema de gestión de trámites de titulación y seguimiento del PAT 2.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
