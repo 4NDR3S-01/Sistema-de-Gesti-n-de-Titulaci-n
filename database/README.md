@@ -8,6 +8,7 @@ Este directorio contiene la estructura relacional, datos iniciales, vistas de co
 
 - **`schema.sql`**: Script DDL que define las tablas relacionales (`roles`, `users`, `students`, `advisors`, `projects_theses`, `procedures`, `procedure_stages`, `documents`), índices, funciones para actualización automática de marcas de tiempo (`updated_at`) y vistas de resumen (`vw_student_titling_summary`).
 - **`seed.sql`**: Datos iniciales de prueba (roles por defecto, usuarios administradores, coordinadores, asesores, estudiantes, proyectos y trámites de ejemplo).
+- **`queries.sql`**: Archivo con consultas SQL útiles, reportes y seguimiento de trámites para operaciones comunes.
 - **`connection.js`**: Módulo de conexión reutilizable en Node.js utilizando el paquete `pg` (Pool de conexiones).
 - **`.env.example`**: Variables de entorno de ejemplo para la configuración de la conexión a la base de datos.
 
