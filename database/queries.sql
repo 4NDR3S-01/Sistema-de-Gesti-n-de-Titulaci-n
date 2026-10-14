@@ -18,10 +18,11 @@ SELECT
     p.status,
     s.student_code,
     u.name || ' ' || u.lastname AS student_name,
-    s.career
+    c.name AS career
 FROM procedures p
 JOIN students s ON p.student_id = s.id
 JOIN users u ON s.user_id = u.id
+JOIN careers c ON s.career_id = c.id
 WHERE p.status = 'IN_REVIEW';
 
 -- 4. Consultar proyectos de tesis y su asesor asignado

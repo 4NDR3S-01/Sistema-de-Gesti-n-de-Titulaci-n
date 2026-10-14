@@ -1,12 +1,9 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { staffRoles } from "@/lib/auth-roles";
+import { requireUser } from "@/lib/current-user";
 
 export default async function PatApprovalLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const session = await auth();
-  const role = session?.user?.role;
-
-  if (role !== "SECRETARY" && role !== "ADMIN") redirect("/panel");
+  await requireUser(staffRoles);
   return children;
 }

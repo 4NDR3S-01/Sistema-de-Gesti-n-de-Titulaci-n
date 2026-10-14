@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { signOut } from "next-auth/react";
 import type { AppRole } from "@/lib/auth-roles";
@@ -9,21 +10,89 @@ type DashboardShellProps = {
   role: AppRole;
   userName: string;
   roleLabel: string;
-  version: string;
   children: ReactNode;
 };
+
+type NavGroup = {
+  title: string;
+  icon: string;
+  links: { href: string; label: string }[];
+};
+
+const icons = {
+  home: "M4 11 12 4l8 7v9h-5v-6H9v6H4z",
+  students: "M2 9 12 4l10 5-10 5zM6 11v5c3 2.5 9 2.5 12 0v-5",
+  secretary: "M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7",
+  admin:
+    "M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6zM9 12l2 2 4-4",
+};
+
+function buildNav(role: AppRole): NavGroup[] {
+  const groups: NavGroup[] = [];
+
+  if (role === "STUDENT") {
+    groups.push({
+      title: "Estudiantes",
+      icon: icons.students,
+      links: [
+        { href: "/perfil", label: "Mis datos" },
+        { href: "/registro-pat-2", label: "Registro de tema PAT 2" },
+      ],
+    });
+  } else {
+    groups.push({
+      title: "Estudiantes",
+      icon: icons.students,
+      links: [
+        { href: "/estudiantes", label: "Listado de estudiantes" },
+        { href: "/estudiantes/nuevo", label: "Nuevo estudiante" },
+        ...(role === "ADMIN"
+          ? [{ href: "/registro-pat-2", label: "Registro de tema PAT 2" }]
+          : []),
+      ],
+    });
+    groups.push({
+      title: "Secretaría",
+      icon: icons.secretary,
+      links: [
+        { href: "/aprobacion-pat-2", label: "Aprobación de PAT 2" },
+        { href: "/tribunales", label: "Asignación de tribunales" },
+      ],
+    });
+  }
+
+  if (role === "ADMIN") {
+    groups.push({
+      title: "Administración",
+      icon: icons.admin,
+      links: [
+        { href: "/admin/usuarios", label: "Usuarios" },
+        { href: "/admin/carreras", label: "Carreras y facultades" },
+      ],
+    });
+  }
+  return groups;
+}
+
+function isActive(pathname: string, href: string) {
+  if (href === "/estudiantes") {
+    return pathname === href || /^\/estudiantes\/\d+/.test(pathname);
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function DashboardShell({
   role,
   userName,
   roleLabel,
-  version,
   children,
 }: DashboardShellProps) {
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const canStudent = role !== "SECRETARY";
-  const canSecretary = role === "SECRETARY" || role === "ADMIN";
+  // El menú móvil queda abierto solo en la ruta donde se abrió: al navegar se cierra.
+  const [menuOpenedAt, setMenuOpenedAt] = useState<string | null>(null);
+  const mobileOpen = menuOpenedAt === pathname;
+  const groups = buildNav(role);
   const initials = userName
     .split(" ")
     .filter(Boolean)
@@ -58,64 +127,65 @@ export function DashboardShell({
         </div>
 
         <nav className="app-nav">
-          <Link className="app-nav-link active" href="/panel" title="Inicio">
+          <Link
+            className={`app-nav-link${pathname === "/panel" ? " active" : ""}`}
+            href="/panel"
+            title="Inicio"
+            aria-current={pathname === "/panel" ? "page" : undefined}
+          >
             <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z" />
+              <path d={icons.home} />
             </svg>
             <span>Inicio</span>
           </Link>
 
-          {canStudent && (
-            <details className="app-nav-group" open>
-              <summary className="app-nav-link" title="Estudiantes">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M2 9 12 4l10 5-10 5zM6 11v5c3 2.5 9 2.5 12 0v-5" />
-                </svg>
-                <span>Estudiantes</span>
-                <svg className="app-chevron" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="m9 6 6 6-6 6" />
-                </svg>
-              </summary>
-              <Link className="app-nav-sublink" href="/registro-pat-2">
-                Registro de tema PAT 2
-              </Link>
-            </details>
-          )}
+          {groups.map((group) => {
+            const groupActive = group.links.some((link) => isActive(pathname, link.href));
+            return (
+              <details className="app-nav-group" open key={group.title}>
+                <summary
+                  className={`app-nav-link${groupActive ? " has-active" : ""}`}
+                  title={group.title}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d={group.icon} />
+                  </svg>
+                  <span>{group.title}</span>
+                  <svg className="app-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m9 6 6 6-6 6" />
+                  </svg>
+                </summary>
+                {group.links.map((link) => {
+                  const active = isActive(pathname, link.href);
+                  return (
+                    <Link
+                      className={`app-nav-sublink${active ? " active" : ""}`}
+                      href={link.href}
+                      key={link.href}
+                      aria-current={active ? "page" : undefined}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </details>
+            );
+          })}
+        </nav>
 
-          {canSecretary && (
-            <details className="app-nav-group" open>
-              <summary className="app-nav-link" title="Secretaría">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7" />
-                </svg>
-                <span>Secretaría</span>
-                <svg className="app-chevron" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="m9 6 6 6-6 6" />
-                </svg>
-              </summary>
-              <Link className="app-nav-sublink" href="/aprobacion-pat-2">
-                Aprobación de PAT 2
-              </Link>
-              <Link className="app-nav-sublink" href="/tribunales">
-                Asignación de tribunales
-              </Link>
-            </details>
-          )}
-
+        <div className="app-sidebar-foot">
           <button
-            className="app-nav-link"
+            className="app-nav-link app-sign-out"
             type="button"
-            title="Salir"
+            title="Cerrar sesión"
             onClick={() => signOut({ redirectTo: "/" })}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9" />
             </svg>
-            <span>Salir</span>
+            <span>Cerrar sesión</span>
           </button>
-        </nav>
-
-        <p className="app-sidebar-foot">Versión {version}</p>
+        </div>
       </aside>
 
       <button
@@ -123,7 +193,7 @@ export function DashboardShell({
         type="button"
         aria-label="Cerrar menú"
         tabIndex={-1}
-        onClick={() => setMobileOpen(false)}
+        onClick={() => setMenuOpenedAt(null)}
       />
 
       <div className="app-main">
@@ -132,22 +202,13 @@ export function DashboardShell({
             className="app-menu-toggle"
             type="button"
             aria-label="Abrir menú"
-            onClick={() => setMobileOpen(true)}
+            onClick={() => setMenuOpenedAt(pathname)}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M4 7h16M4 12h16M4 17h16" />
             </svg>
           </button>
-          <h1 className="app-header-title">
-            DGDA - Titulación <span>· Versión {version}</span>
-          </h1>
-          <label className="app-search">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="11" cy="11" r="6" />
-              <path d="m20 20-4.5-4.5" />
-            </svg>
-            <input type="search" placeholder="Buscar…" aria-label="Buscar" />
-          </label>
+          <p className="app-header-title">DGDA - Titulación</p>
           <div className="app-user">
             <span className="app-user-text">
               <strong>{userName}</strong>
