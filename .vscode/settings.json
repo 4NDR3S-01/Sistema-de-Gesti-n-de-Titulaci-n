@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^mv src/app/aprobacion-pap2 src/app/aprobacion-pat-2 && mv src/app/registro-pap2 src/app/registro-pat-2$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

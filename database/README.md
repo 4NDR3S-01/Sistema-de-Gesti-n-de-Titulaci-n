@@ -1,16 +1,15 @@
 # Módulo de Base de Datos - Sistema de Titulación (PostgreSQL)
 
-Este directorio contiene la estructura relacional, datos iniciales y la lógica de conexión para el sistema de gestión de trámites de titulación utilizando **PostgreSQL**.
+Este directorio contiene la estructura relacional, datos iniciales, vistas de consulta, triggers automatizados y la lógica de conexión para el sistema de gestión de trámites de titulación utilizando **PostgreSQL**.
 
 ---
 
 ## 📂 Estructura de Archivos
 
-- **`schema.sql`**: Script DDL que define las tablas relacionales (`roles`, `users`, `students`, `advisors`, `projects_theses`, `procedures`, `procedure_stages`, `documents`) y sus respectivos índices.
-- **`seed.sql`**: Datos iniciales (roles por defecto y usuario administrador).
+- **`schema.sql`**: Script DDL que define las tablas relacionales (`roles`, `users`, `students`, `advisors`, `projects_theses`, `procedures`, `procedure_stages`, `documents`), índices, funciones para actualización automática de marcas de tiempo (`updated_at`) y vistas de resumen (`vw_student_titling_summary`).
+- **`seed.sql`**: Datos iniciales de prueba (roles por defecto, usuarios administradores, coordinadores, asesores, estudiantes, proyectos y trámites de ejemplo).
 - **`connection.js`**: Módulo de conexión reutilizable en Node.js utilizando el paquete `pg` (Pool de conexiones).
-- **`.env.example`**: Variables de entorno de ejemplo para la conexión.
-- **`docker-compose.yml`**: Configuración de Docker para levantar PostgreSQL rápidamente con inicialización automática de esquemas y datos.
+- **`.env.example`**: Variables de entorno de ejemplo para la configuración de la conexión a la base de datos.
 
 ---
 
@@ -50,7 +49,7 @@ psql -U postgres -d sistema_titulacion -f seed.sql
 ---
 
 ### 3. Configurar las Variables de Entorno
-Copia el archivo `.env.example` a `.env` en tu proyecto de backend y ajusta tus credenciales locales:
+Copia el archivo `.env.example` a `.env` en tu proyecto y ajusta tus credenciales locales:
 ```env
 DB_HOST=localhost
 DB_PORT=5432
