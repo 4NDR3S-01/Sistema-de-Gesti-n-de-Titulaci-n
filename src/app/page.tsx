@@ -9,7 +9,8 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const demoEnabled = process.env.NEXT_PUBLIC_DEMO_AUTH_ENABLED === "true";
+  const passwordEnabled =
+    process.env.NEXT_PUBLIC_PASSWORD_AUTH_ENABLED === "true";
   const microsoftEnabled =
     process.env.NEXT_PUBLIC_MICROSOFT_ENABLED === "true";
 
@@ -113,7 +114,7 @@ export default function Home() {
               id="email"
               name="email"
               type="email"
-              placeholder="usuario@pruebas.test"
+              placeholder="correo@institucion.edu"
               autoComplete="username"
               required
               disabled={isSubmitting}
@@ -167,10 +168,10 @@ export default function Home() {
             </p>
           )}
 
-          {demoEnabled && (
+          {!passwordEnabled && (
             <p className="demo-note">
-              Modo de prueba: utiliza una de las cuentas locales de estudiante,
-              secretaría o administración. No uses tu correo institucional.
+              El acceso con correo y contraseña está deshabilitado en este
+              entorno. Usa el acceso institucional.
             </p>
           )}
 
