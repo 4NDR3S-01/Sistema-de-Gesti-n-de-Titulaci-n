@@ -60,11 +60,16 @@ CREATE TABLE IF NOT EXISTS careers (
 CREATE TABLE IF NOT EXISTS students (
     id SERIAL PRIMARY KEY,
     user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    student_code VARCHAR(50) UNIQUE NOT NULL, -- Matrícula / Código de estudiante
+    student_code VARCHAR(50) UNIQUE,          -- Matrícula / Código de estudiante (opcional)
     cedula VARCHAR(10),                       -- Cédula de identidad (10 dígitos)
     career_id INTEGER NOT NULL REFERENCES careers(id) ON DELETE RESTRICT,
     semester SMALLINT,                        -- Semestre / nivel actual
     phone VARCHAR(10),                        -- Celular (09XXXXXXXX)
+    sex VARCHAR(10),                          -- MASCULINO / FEMENINO
+    personal_email VARCHAR(150),              -- Correo personal (el institucional es users.email)
+    address VARCHAR(200),                     -- Domicilio
+    landline VARCHAR(10),                     -- Teléfono convencional
+    curriculum_changes SMALLINT,              -- Número de cambio de malla
     enrollment_year INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -74,7 +79,13 @@ CREATE TABLE IF NOT EXISTS students (
     CONSTRAINT chk_student_semester
         CHECK (semester IS NULL OR semester BETWEEN 1 AND 12),
     CONSTRAINT chk_student_phone
-        CHECK (phone IS NULL OR phone ~ '^09[0-9]{8}$')
+        CHECK (phone IS NULL OR phone ~ '^09[0-9]{8}$'),
+    CONSTRAINT chk_student_sex
+        CHECK (sex IS NULL OR sex IN ('MASCULINO', 'FEMENINO')),
+    CONSTRAINT chk_student_landline
+        CHECK (landline IS NULL OR landline ~ '^[0-9]{7,10}$'),
+    CONSTRAINT chk_student_curriculum_changes
+        CHECK (curriculum_changes IS NULL OR curriculum_changes BETWEEN 0 AND 20)
 );
 
 -- 4. Tabla de Asesores / Tutores / Docentes

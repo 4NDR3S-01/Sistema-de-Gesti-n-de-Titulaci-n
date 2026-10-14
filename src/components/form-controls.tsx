@@ -10,6 +10,7 @@ export function Field({
   error,
   hint,
   className,
+  required,
   children,
 }: {
   label: string;
@@ -17,11 +18,20 @@ export function Field({
   error?: string[];
   hint?: string;
   className?: string;
+  /** Muestra el asterisco de campo obligatorio. */
+  required?: boolean;
   children: ReactNode;
 }) {
   return (
     <div className={`field${error?.length ? " has-error" : ""}${className ? ` ${className}` : ""}`}>
-      <label htmlFor={name}>{label}</label>
+      <label htmlFor={name}>
+        {label}
+        {required && (
+          <span className="field-required" aria-hidden="true">
+            {" "}*
+          </span>
+        )}
+      </label>
       {children}
       {error?.length ? (
         <span className="field-error" id={`${name}-error`}>

@@ -10,10 +10,14 @@ export type StudentRow = {
   lastname: string;
   email: string;
   is_active: boolean;
-  student_code: string;
   cedula: string | null;
   semester: number | null;
   phone: string | null;
+  sex: "MASCULINO" | "FEMENINO" | null;
+  personal_email: string | null;
+  address: string | null;
+  landline: string | null;
+  curriculum_changes: number | null;
   enrollment_year: number | null;
   career_id: number;
   career: string;
@@ -36,16 +40,21 @@ export type StudentInput = {
   lastname: string;
   email: string;
   cedula: string;
-  studentCode: string;
   careerId: number;
   semester?: number;
   phone?: string;
+  sex?: "MASCULINO" | "FEMENINO";
+  personalEmail?: string;
+  address?: string;
+  landline?: string;
+  curriculumChanges?: number;
   enrollmentYear?: number;
 };
 
 const studentSelect = `
   SELECT s.id, s.user_id, u.name, u.lastname, u.email, u.is_active,
-         s.student_code, s.cedula, s.semester, s.phone, s.enrollment_year,
+         s.cedula, s.semester, s.phone, s.sex, s.personal_email, s.address,
+         s.landline, s.curriculum_changes, s.enrollment_year,
          s.career_id, c.name AS career, f.id AS faculty_id, f.name AS faculty,
          s.updated_at
   FROM students s
@@ -67,7 +76,7 @@ export async function listStudents(filters: {
     const p = `$${params.length}`;
     conditions.push(
       `(u.name ILIKE ${p} OR u.lastname ILIKE ${p} OR u.email ILIKE ${p}
-        OR s.cedula ILIKE ${p} OR s.student_code ILIKE ${p}
+        OR s.cedula ILIKE ${p}
         OR (u.name || ' ' || u.lastname) ILIKE ${p})`,
     );
   }
@@ -133,6 +142,17 @@ export async function getStudentTitlingStatus(
   return row;
 }
 
+/** Valores de los campos del formulario institucional, en el orden de las columnas. */
+function personalValues(data: Partial<StudentInput>) {
+  return [
+    data.sex ?? null,
+    data.personalEmail ?? null,
+    data.address ?? null,
+    data.landline ?? null,
+    data.curriculumChanges ?? null,
+  ];
+}
+
 export async function createStudent(
   data: StudentInput & { password: string },
 ): Promise<number> {
@@ -145,17 +165,18 @@ export async function createStudent(
       [data.name, data.lastname, data.email, passwordHash],
     );
     const student = await client.query<{ id: number }>(
-      `INSERT INTO students (user_id, student_code, cedula, career_id, semester, phone, enrollment_year)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO students (user_id, cedula, career_id, semester, phone, enrollment_year,
+                             sex, personal_email, address, landline, curriculum_changes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING id`,
       [
         user.rows[0].id,
-        data.studentCode,
         data.cedula,
         data.careerId,
         data.semester ?? null,
         data.phone ?? null,
         data.enrollmentYear ?? null,
+        ...personalValues(data),
       ],
     );
     return student.rows[0].id;
@@ -169,17 +190,17 @@ export async function updateStudentByStaff(
   return withTransaction(async (client) => {
     const student = await client.query<{ user_id: number }>(
       `UPDATE students
-       SET student_code = $1, cedula = $2, career_id = $3, semester = $4,
-           phone = $5, enrollment_year = $6
-       WHERE id = $7
+       SET cedula = $1, career_id = $2, semester = $3, phone = $4, enrollment_year = $5,
+           sex = $6, personal_email = $7, address = $8, landline = $9, curriculum_changes = $10
+       WHERE id = $11
        RETURNING user_id`,
       [
-        data.studentCode,
         data.cedula,
         data.careerId,
         data.semester ?? null,
         data.phone ?? null,
         data.enrollmentYear ?? null,
+        ...personalValues(data),
         id,
       ],
     );
@@ -192,15 +213,23 @@ export async function updateStudentByStaff(
   });
 }
 
+/** Actualización hecha por el propio estudiante (formulario institucional). */
 export async function updateStudentSelf(
   userId: number,
-  data: { email: string; phone?: string },
+  data: Pick<StudentInput, "cedula" | "name" | "lastname" | "email" | "curriculumChanges"> &
+    Required<Pick<StudentInput, "sex" | "personalEmail" | "address" | "landline" | "phone">>,
 ): Promise<void> {
   await withTransaction(async (client) => {
-    await client.query("UPDATE users SET email = $1 WHERE id = $2", [data.email, userId]);
-    await client.query("UPDATE students SET phone = $1 WHERE user_id = $2", [
-      data.phone ?? null,
-      userId,
-    ]);
+    await client.query(
+      "UPDATE users SET name = $1, lastname = $2, email = $3 WHERE id = $4",
+      [data.name, data.lastname, data.email, userId],
+    );
+    await client.query(
+      `UPDATE students
+       SET cedula = $1, phone = $2, sex = $3, personal_email = $4, address = $5,
+           landline = $6, curriculum_changes = $7
+       WHERE user_id = $8`,
+      [data.cedula, data.phone, ...personalValues(data), userId],
+    );
   });
 }

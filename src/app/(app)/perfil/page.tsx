@@ -1,9 +1,8 @@
 import { updateOwnProfileAction } from "@/app/(app)/perfil/actions";
-import { ProfileForm } from "@/components/profile-form";
-import { StudentProfileCard } from "@/components/student-profile-card";
+import { StudentSelfForm } from "@/components/student-form";
 import { Alert, PageHeader } from "@/components/ui";
 import { requireUser } from "@/lib/current-user";
-import { getStudentByUserId, getStudentTitlingStatus } from "@/lib/data/students";
+import { getStudentByUserId } from "@/lib/data/students";
 
 export default async function ProfilePage() {
   const user = await requireUser(["STUDENT"]);
@@ -14,23 +13,29 @@ export default async function ProfilePage() {
       <PageHeader
         eyebrow="MI CUENTA"
         title="Mis datos"
-        description="Revisa tu información registrada y actualiza tus datos de contacto."
+        description="Revisa y actualiza tu información personal y académica."
       />
       {student ? (
         <div className="stack">
-          <StudentProfileCard
-            student={student}
-            status={await getStudentTitlingStatus(student.id)}
-          />
-          <ProfileForm
-            action={updateOwnProfileAction}
-            email={student.email}
-            phone={student.phone ?? ""}
-          />
-          <Alert tone="info" title="¿Hay un error en tu cédula, carrera o facultad?">
-            Esos datos solo los puede corregir secretaría académica. Comunícate
-            con ellos para solicitar el cambio.
+          <Alert tone="info" title={`${student.career} · ${student.faculty}`}>
+            Tu carrera, facultad, semestre y año de ingreso los registra
+            secretaría académica. Si hay un error, comunícate con ellos.
           </Alert>
+          <StudentSelfForm
+            action={updateOwnProfileAction}
+            initial={{
+              cedula: student.cedula ?? "",
+              name: student.name,
+              lastname: student.lastname,
+              email: student.email,
+              sex: student.sex ?? "",
+              personalEmail: student.personal_email ?? "",
+              address: student.address ?? "",
+              landline: student.landline ?? "",
+              phone: student.phone ?? "",
+              curriculumChanges: student.curriculum_changes?.toString() ?? "",
+            }}
+          />
         </div>
       ) : (
         <Alert tone="warning" title="Tu perfil académico aún no está registrado">

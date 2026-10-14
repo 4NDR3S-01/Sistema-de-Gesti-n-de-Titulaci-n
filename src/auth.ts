@@ -5,6 +5,13 @@ import bcrypt from "bcryptjs";
 import { isAppRole } from "@/lib/auth-roles";
 import { findUserByEmail } from "@/lib/data/users";
 
+/** En desarrollo, explica en la consola del servidor por qué se rechazó un login. */
+function logRejectedLogin(email: string, reason: string) {
+  if (process.env.NODE_ENV === "development") {
+    console.warn(`[login] ${email}: ${reason}`);
+  }
+}
+
 const microsoftConfigured = Boolean(
   process.env.AUTH_MICROSOFT_ENTRA_ID_ID &&
     process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET &&
@@ -20,7 +27,10 @@ const providers = [
       password: { label: "Contraseña", type: "password" },
     },
     async authorize(credentials) {
-      if (process.env.PASSWORD_AUTH_ENABLED !== "true") return null;
+      if (process.env.PASSWORD_AUTH_ENABLED !== "true") {
+        logRejectedLogin("-", "PASSWORD_AUTH_ENABLED no está en true");
+        return null;
+      }
 
       const email =
         typeof credentials.email === "string"
@@ -31,13 +41,32 @@ const providers = [
       if (!email || !password) return null;
 
       const user = await findUserByEmail(email);
-      if (!user || !user.is_active || !isAppRole(user.role)) return null;
+      if (!user) {
+        logRejectedLogin(email, "no existe en la tabla users");
+        return null;
+      }
+      if (!user.is_active) {
+        logRejectedLogin(email, "la cuenta está desactivada");
+        return null;
+      }
+      if (!isAppRole(user.role)) {
+        logRejectedLogin(email, `el rol ${user.role} no tiene acceso al sistema`);
+        return null;
+      }
       if (!/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(user.password_hash)) {
+        logRejectedLogin(email, "no tiene contraseña asignada (usa npm run db:password)");
         return null;
       }
 
       const passwordMatches = await bcrypt.compare(password, user.password_hash);
-      if (!passwordMatches) return null;
+      if (!passwordMatches) {
+        logRejectedLogin(
+          email,
+          `contraseña incorrecta (llegaron ${password.length} caracteres` +
+            `${password !== password.trim() ? ", con espacios al inicio o al final" : ""})`,
+        );
+        return null;
+      }
 
       return {
         id: String(user.id),

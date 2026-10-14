@@ -33,7 +33,10 @@ export default function Home() {
         return;
       }
 
-      router.push(result.url);
+      // Solo la ruta: el host que arma Auth.js puede no ser el que usa el navegador
+      // (por ejemplo, al entrar desde otro equipo por la IP de la red).
+      const { pathname, search } = new URL(result.url, window.location.origin);
+      router.push(`${pathname}${search}`);
       router.refresh();
     } catch {
       setMessage("No se pudo conectar con el servicio de acceso. Intenta de nuevo.");

@@ -16,9 +16,7 @@ export function studentDbError(
       ? { email: ["Ya existe un usuario con ese correo."] }
       : constraint.includes("cedula")
         ? { cedula: ["Ya existe un estudiante con esa cédula."] }
-        : constraint.includes("student_code")
-          ? { studentCode: ["Ya existe un estudiante con ese código."] }
-          : {};
+        : {};
     return validationError(formData, field);
   }
   if (code === "23503") {
