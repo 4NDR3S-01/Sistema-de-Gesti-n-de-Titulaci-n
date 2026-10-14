@@ -18,15 +18,20 @@ export function StudentProfileCard({
   editHref?: string;
 }) {
   const initials = `${student.name[0] ?? ""}${student.lastname[0] ?? ""}`.toUpperCase();
+  const sexLabel = { MASCULINO: "Masculino", FEMENINO: "Femenino" } as const;
   const details = [
     { label: "Cédula", value: student.cedula },
-    { label: "Código de estudiante", value: student.student_code },
+    { label: "Sexo", value: student.sex ? sexLabel[student.sex] : null },
     { label: "Carrera", value: student.career },
     { label: "Facultad", value: student.faculty },
+    { label: "Correo institucional", value: student.email, wide: true },
+    { label: "Correo personal", value: student.personal_email, wide: true },
+    { label: "Domicilio", value: student.address, wide: true },
+    { label: "Teléfono", value: student.landline },
+    { label: "Celular", value: student.phone },
     { label: "Semestre / nivel", value: student.semester ? `${student.semester}.º semestre` : null },
     { label: "Año de ingreso", value: student.enrollment_year?.toString() },
-    { label: "Correo", value: student.email },
-    { label: "Celular", value: student.phone },
+    { label: "Número de cambio de malla", value: student.curriculum_changes?.toString(), wide: true },
   ];
 
   return (
@@ -51,7 +56,7 @@ export function StudentProfileCard({
 
       <dl className="profile-details">
         {details.map((item) => (
-          <div key={item.label}>
+          <div key={item.label} className={item.wide ? "is-wide" : undefined}>
             <dt>{item.label}</dt>
             <dd>{item.value || <span className="text-muted">No registrado</span>}</dd>
           </div>

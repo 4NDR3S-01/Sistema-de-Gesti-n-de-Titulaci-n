@@ -43,10 +43,14 @@ export default async function EditStudentPage(
           lastname: student.lastname,
           email: student.email,
           cedula: student.cedula ?? "",
-          studentCode: student.student_code,
           careerId: String(student.career_id),
           semester: student.semester?.toString() ?? "",
           phone: student.phone ?? "",
+          sex: student.sex ?? "",
+          personalEmail: student.personal_email ?? "",
+          address: student.address ?? "",
+          landline: student.landline ?? "",
+          curriculumChanges: student.curriculum_changes?.toString() ?? "",
           enrollmentYear: student.enrollment_year?.toString() ?? "",
         }}
       />

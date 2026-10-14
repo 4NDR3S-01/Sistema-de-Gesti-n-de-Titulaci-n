@@ -46,8 +46,8 @@ ON CONFLICT (id) DO NOTHING;
 SELECT setval('careers_id_seq', (SELECT MAX(id) FROM careers));
 
 -- 4.1 Registro de Estudiante
-INSERT INTO students (id, user_id, student_code, cedula, career_id, semester, phone, enrollment_year) VALUES
-(1, 4, '2021102345', '1710034065', 1, 9, '0991234567', 2021)
+INSERT INTO students (id, user_id, student_code, cedula, career_id, semester, phone, sex, personal_email, address, landline, curriculum_changes, enrollment_year) VALUES
+(1, 4, '2021102345', '1710034065', 1, 9, '0991234567', 'MASCULINO', 'juan.perez@example.com', 'Av. Principal y Calle 10, Manta', '052620000', 0, 2021)
 ON CONFLICT (id) DO NOTHING;
 
 SELECT setval('students_id_seq', (SELECT MAX(id) FROM students));

@@ -62,7 +62,7 @@ export default async function StudentsPage(props: PageProps<"/estudiantes">) {
               type="search"
               name="q"
               defaultValue={search}
-              placeholder="Buscar por nombre, cédula, código o correo"
+              placeholder="Buscar por nombre, cédula o correo"
             />
           </label>
           <label>
@@ -117,7 +117,6 @@ export default async function StudentsPage(props: PageProps<"/estudiantes">) {
                   <tr>
                     <th scope="col">Estudiante</th>
                     <th scope="col">Cédula</th>
-                    <th scope="col">Código</th>
                     <th scope="col">Carrera</th>
                     <th scope="col">Semestre</th>
                     <th scope="col">Cuenta</th>
@@ -136,7 +135,6 @@ export default async function StudentsPage(props: PageProps<"/estudiantes">) {
                         <small>{student.email}</small>
                       </td>
                       <td data-label="Cédula">{student.cedula ?? "—"}</td>
-                      <td data-label="Código">{student.student_code}</td>
                       <td data-label="Carrera">
                         {student.career}
                         <small>{student.faculty}</small>

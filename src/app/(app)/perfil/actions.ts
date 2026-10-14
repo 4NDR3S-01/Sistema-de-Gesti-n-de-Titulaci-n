@@ -7,7 +7,7 @@ import { studentDbError } from "@/lib/db-errors";
 import { formResult, type FormState } from "@/lib/form-state";
 import { formValues, studentSelfSchema, validationError } from "@/lib/validation";
 
-/** El estudiante solo puede cambiar su correo y su celular. */
+/** El estudiante actualiza sus datos; la carrera y la facultad solo las cambia secretaría. */
 export async function updateOwnProfileAction(
   _prev: FormState,
   formData: FormData,
@@ -25,8 +25,8 @@ export async function updateOwnProfileAction(
     return studentDbError(error, formData);
   }
 
-  revalidatePath("/perfil");
-  revalidatePath("/panel");
+  // "layout" refresca también el nombre que muestra el encabezado.
+  revalidatePath("/", "layout");
   return formResult({
     status: "success",
     message: "Tus datos se actualizaron correctamente.",

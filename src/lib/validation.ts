@@ -32,7 +32,7 @@ const personName = (label: string) =>
     .regex(/^[\p{L}\s'.-]+$/u, `${label[0].toUpperCase()}${label.slice(1)} solo puede contener letras.`);
 
 export const emailField = z
-  .string({ required_error: "Ingresa el correo." })
+  .string({ required_error: "Ingresa el correo institucional." })
   .trim()
   .toLowerCase()
   .max(150, "El correo no puede superar 150 caracteres.")
@@ -46,6 +46,50 @@ const phoneField = z.preprocess(
     .regex(/^09\d{8}$/, "El celular debe tener 10 dígitos y empezar con 09.")
     .optional(),
 );
+
+const mobileRequired = z
+  .string({ required_error: "Ingresa el celular." })
+  .trim()
+  .regex(/^09\d{8}$/, "El celular debe tener 10 dígitos y empezar con 09.");
+
+const sexField = z.enum(["MASCULINO", "FEMENINO"], {
+  errorMap: () => ({ message: "Selecciona el sexo." }),
+});
+
+const personalEmailField = z
+  .string({ required_error: "Ingresa el correo personal." })
+  .trim()
+  .toLowerCase()
+  .max(150, "El correo no puede superar 150 caracteres.")
+  .email("Ingresa un correo personal válido.");
+
+const addressField = z
+  .string({ required_error: "Ingresa el domicilio." })
+  .trim()
+  .min(5, "El domicilio debe tener al menos 5 caracteres.")
+  .max(200, "El domicilio no puede superar 200 caracteres.");
+
+const landlineField = z
+  .string({ required_error: "Ingresa el teléfono." })
+  .trim()
+  .regex(/^\d{7,10}$/, "El teléfono debe tener entre 7 y 10 dígitos, sin espacios.");
+
+const curriculumChangesField = z.preprocess(
+  emptyToUndefined,
+  z.coerce
+    .number({ invalid_type_error: "Ingresa un número válido." })
+    .int("Ingresa un número entero.")
+    .min(0, "El número de cambio de malla no puede ser negativo.")
+    .max(20, "El número de cambio de malla no puede superar 20.")
+    .optional(),
+);
+
+/** Campo obligatorio: un texto vacío cuenta como faltante y muestra su `required_error`. */
+const required = <T extends z.ZodTypeAny>(field: T) => z.preprocess(emptyToUndefined, field);
+
+/** Campos del formulario institucional; en el registro por secretaría son opcionales. */
+const optional = <T extends z.ZodTypeAny>(field: T) =>
+  z.preprocess(emptyToUndefined, field.optional());
 
 const passwordField = z
   .string()
@@ -63,12 +107,6 @@ export const studentStaffSchema = z.object({
     .string({ required_error: "Ingresa la cédula." })
     .trim()
     .refine(isValidCedula, "La cédula no es válida."),
-  studentCode: z
-    .string({ required_error: "Ingresa el código de estudiante." })
-    .trim()
-    .min(3, "El código debe tener al menos 3 caracteres.")
-    .max(50, "El código no puede superar 50 caracteres.")
-    .regex(/^[A-Za-z0-9-]+$/, "El código solo admite letras, números y guiones."),
   careerId: idField("Selecciona una carrera."),
   semester: z.preprocess(
     emptyToUndefined,
@@ -80,6 +118,11 @@ export const studentStaffSchema = z.object({
       .optional(),
   ),
   phone: phoneField,
+  sex: optional(sexField),
+  personalEmail: optional(personalEmailField),
+  address: optional(addressField),
+  landline: optional(landlineField),
+  curriculumChanges: curriculumChangesField,
   enrollmentYear: z.preprocess(
     emptyToUndefined,
     z.coerce
@@ -95,9 +138,22 @@ export const studentCreateSchema = studentStaffSchema.extend({
   password: passwordField,
 });
 
+/**
+ * Datos que el estudiante actualiza por sí mismo (formulario institucional).
+ * Todos son obligatorios salvo el número de cambio de malla; carrera, facultad,
+ * semestre y año de ingreso los gestiona secretaría.
+ */
 export const studentSelfSchema = z.object({
-  email: emailField,
-  phone: phoneField,
+  cedula: required(studentStaffSchema.shape.cedula),
+  name: required(personName("los nombres")),
+  lastname: required(personName("los apellidos")),
+  email: required(emailField),
+  sex: required(sexField),
+  personalEmail: required(personalEmailField),
+  address: required(addressField),
+  landline: required(landlineField),
+  phone: required(mobileRequired),
+  curriculumChanges: curriculumChangesField,
 });
 
 const staffRoleField = z.enum(["ADMIN", "SECRETARY"], {

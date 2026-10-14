@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { signOut } from "next-auth/react";
 import type { AppRole } from "@/lib/auth-roles";
@@ -88,6 +88,7 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   // El menú móvil queda abierto solo en la ruta donde se abrió: al navegar se cierra.
   const [menuOpenedAt, setMenuOpenedAt] = useState<string | null>(null);
@@ -178,7 +179,11 @@ export function DashboardShell({
             className="app-nav-link app-sign-out"
             type="button"
             title="Cerrar sesión"
-            onClick={() => signOut({ redirectTo: "/" })}
+            onClick={async () => {
+              await signOut({ redirect: false });
+              router.replace("/");
+              router.refresh();
+            }}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9" />
