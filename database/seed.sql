@@ -7,7 +7,8 @@ INSERT INTO roles (id, name, description) VALUES
 (1, 'ADMIN', 'Administrador del sistema con acceso total'),
 (2, 'COORDINATOR', 'Coordinador de titulación encargado de validar trámites y jurados'),
 (3, 'ADVISOR', 'Docente / Asesor de tesis o proyectos de grado'),
-(4, 'STUDENT', 'Estudiante en proceso de titulación')
+(4, 'STUDENT', 'Estudiante en proceso de titulación'),
+(5, 'SECRETARY', 'Secretaría académica: revisa solicitudes y gestiona estudiantes')
 ON CONFLICT (id) DO NOTHING;
 
 -- Ajustar secuencia de roles si es necesario
@@ -18,7 +19,8 @@ INSERT INTO users (id, name, lastname, email, password_hash, role_id, is_active)
 (1, 'Administrador', 'Sistema', 'admin@titulacion.edu', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 1, TRUE),
 (2, 'Carlos', 'Coordinador', 'coordinator@titulacion.edu', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 2, TRUE),
 (3, 'Dra. María', 'Gómez', 'advisor@titulacion.edu', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 3, TRUE),
-(4, 'Juan', 'Pérez', 'student@titulacion.edu', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 4, TRUE)
+(4, 'Juan', 'Pérez', 'student@titulacion.edu', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 4, TRUE),
+(5, 'Ana', 'Secretaría', 'secretaria@titulacion.edu', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 5, TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
@@ -30,9 +32,22 @@ ON CONFLICT (id) DO NOTHING;
 
 SELECT setval('advisors_id_seq', (SELECT MAX(id) FROM advisors));
 
--- 4. Registro de Estudiante
-INSERT INTO students (id, user_id, student_code, faculty, career, enrollment_year) VALUES
-(1, 4, '2021102345', 'Facultad de Ingeniería', 'Ingeniería de Software', 2021)
+-- 4. Facultades y Carreras
+INSERT INTO faculties (id, name) VALUES
+(1, 'Facultad de Ingeniería')
+ON CONFLICT (id) DO NOTHING;
+
+SELECT setval('faculties_id_seq', (SELECT MAX(id) FROM faculties));
+
+INSERT INTO careers (id, faculty_id, name) VALUES
+(1, 1, 'Ingeniería de Software')
+ON CONFLICT (id) DO NOTHING;
+
+SELECT setval('careers_id_seq', (SELECT MAX(id) FROM careers));
+
+-- 4.1 Registro de Estudiante
+INSERT INTO students (id, user_id, student_code, cedula, career_id, semester, phone, sex, personal_email, address, landline, curriculum_changes, enrollment_year) VALUES
+(1, 4, '2021102345', '1710034065', 1, 9, '0991234567', 'MASCULINO', 'juan.perez@example.com', 'Av. Principal y Calle 10, Manta', '052620000', 0, 2021)
 ON CONFLICT (id) DO NOTHING;
 
 SELECT setval('students_id_seq', (SELECT MAX(id) FROM students));

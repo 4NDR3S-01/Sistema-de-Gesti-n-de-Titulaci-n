@@ -36,15 +36,56 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Tabla de Estudiantes
+-- 3. Catálogos de Facultades y Carreras
+CREATE TABLE IF NOT EXISTS faculties (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(150) UNIQUE NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS careers (
+    id SERIAL PRIMARY KEY,
+    faculty_id INTEGER NOT NULL REFERENCES faculties(id) ON DELETE RESTRICT,
+    name VARCHAR(150) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_career_faculty_name UNIQUE (faculty_id, name)
+);
+
+-- 3.1 Tabla de Estudiantes
 CREATE TABLE IF NOT EXISTS students (
     id SERIAL PRIMARY KEY,
     user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    student_code VARCHAR(50) UNIQUE NOT NULL, -- Matrícula / Código de estudiante
-    faculty VARCHAR(150) NOT NULL,            -- Facultad / Escuela
-    career VARCHAR(150) NOT NULL,             -- Carrera / Programa académico
+    student_code VARCHAR(50) UNIQUE,          -- Matrícula / Código de estudiante (opcional)
+    cedula VARCHAR(10),                       -- Cédula de identidad (10 dígitos)
+    career_id INTEGER NOT NULL REFERENCES careers(id) ON DELETE RESTRICT,
+    semester SMALLINT,                        -- Semestre / nivel actual
+    phone VARCHAR(10),                        -- Celular (09XXXXXXXX)
+    sex VARCHAR(10),                          -- MASCULINO / FEMENINO
+    personal_email VARCHAR(150),              -- Correo personal (el institucional es users.email)
+    address VARCHAR(200),                     -- Domicilio
+    landline VARCHAR(10),                     -- Teléfono convencional
+    curriculum_changes SMALLINT,              -- Número de cambio de malla
     enrollment_year INTEGER,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_student_cedula
+        CHECK (cedula IS NULL OR cedula ~ '^[0-9]{10}$'),
+    CONSTRAINT chk_student_semester
+        CHECK (semester IS NULL OR semester BETWEEN 1 AND 12),
+    CONSTRAINT chk_student_phone
+        CHECK (phone IS NULL OR phone ~ '^09[0-9]{8}$'),
+    CONSTRAINT chk_student_sex
+        CHECK (sex IS NULL OR sex IN ('MASCULINO', 'FEMENINO')),
+    CONSTRAINT chk_student_landline
+        CHECK (landline IS NULL OR landline ~ '^[0-9]{7,10}$'),
+    CONSTRAINT chk_student_curriculum_changes
+        CHECK (curriculum_changes IS NULL OR curriculum_changes BETWEEN 0 AND 20)
 );
 
 -- 4. Tabla de Asesores / Tutores / Docentes
@@ -196,6 +237,25 @@ CREATE TRIGGER update_users_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+-- Triggers para estudiantes y catálogos
+DROP TRIGGER IF EXISTS update_students_updated_at ON students;
+CREATE TRIGGER update_students_updated_at
+    BEFORE UPDATE ON students
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_faculties_updated_at ON faculties;
+CREATE TRIGGER update_faculties_updated_at
+    BEFORE UPDATE ON faculties
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_careers_updated_at ON careers;
+CREATE TRIGGER update_careers_updated_at
+    BEFORE UPDATE ON careers
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 -- Trigger para projects_theses
 DROP TRIGGER IF EXISTS update_projects_theses_updated_at ON projects_theses;
 CREATE TRIGGER update_projects_theses_updated_at
@@ -221,8 +281,10 @@ SELECT
     u.name || ' ' || u.lastname AS student_name,
     u.email AS student_email,
     s.student_code,
-    s.faculty,
-    s.career,
+    s.cedula,
+    f.name AS faculty,
+    c.name AS career,
+    s.semester,
     p.id AS project_id,
     p.title AS project_title,
     p.status AS project_status,
@@ -233,6 +295,8 @@ SELECT
     proc.status AS procedure_status
 FROM students s
 JOIN users u ON s.user_id = u.id
+JOIN careers c ON s.career_id = c.id
+JOIN faculties f ON c.faculty_id = f.id
 LEFT JOIN projects_theses p ON s.id = p.student_id
 LEFT JOIN advisors adv ON p.advisor_id = adv.id
 LEFT JOIN users adv_u ON adv.user_id = adv_u.id
@@ -243,6 +307,9 @@ LEFT JOIN procedures proc ON s.id = proc.student_id;
 -- ========================================================
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_students_code ON students(student_code);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_students_cedula ON students(cedula);
+CREATE INDEX IF NOT EXISTS idx_students_career ON students(career_id);
+CREATE INDEX IF NOT EXISTS idx_careers_faculty ON careers(faculty_id);
 CREATE INDEX IF NOT EXISTS idx_procedures_student ON procedures(student_id);
 CREATE INDEX IF NOT EXISTS idx_projects_student ON projects_theses(student_id);
 CREATE INDEX IF NOT EXISTS idx_procedures_stages ON procedure_stages(procedure_id);

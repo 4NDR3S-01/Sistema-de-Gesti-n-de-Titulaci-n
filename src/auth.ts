@@ -2,71 +2,16 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import bcrypt from "bcryptjs";
-import { isAppRole, type AppRole } from "@/lib/auth-roles";
+import { isAppRole } from "@/lib/auth-roles";
+import { findUserByEmail } from "@/lib/data/users";
 
-type DemoAccount = {
-  email: string;
-  name: string;
-  role: AppRole;
-  passwordHash: string;
-};
-
-function getDemoAccounts(): DemoAccount[] {
-  return [
-    {
-      email: process.env.DEMO_STUDENT_EMAIL?.trim().toLowerCase() ?? "",
-      name: "Estudiante de prueba",
-      role: "STUDENT",
-      passwordHash: process.env.DEMO_STUDENT_PASSWORD_HASH_B64 ?? "",
-    },
-    {
-      email: process.env.DEMO_SECRETARY_EMAIL?.trim().toLowerCase() ?? "",
-      name: "Secretaría de prueba",
-      role: "SECRETARY",
-      passwordHash: process.env.DEMO_SECRETARY_PASSWORD_HASH_B64 ?? "",
-    },
-    {
-      email: process.env.DEMO_ADMIN_EMAIL?.trim().toLowerCase() ?? "",
-      name: "Administración de prueba",
-      role: "ADMIN",
-      passwordHash: process.env.DEMO_ADMIN_PASSWORD_HASH_B64 ?? "",
-    },
-  ];
+/** En desarrollo, explica en la consola del servidor por qué se rechazó un login. */
+function logRejectedLogin(email: string, reason: string) {
+  if (process.env.NODE_ENV === "development") {
+    console.warn(`[login] ${email}: ${reason}`);
+  }
 }
 
-function getMicrosoftRoleMap(): Record<string, AppRole> {
-  const value = process.env.MICROSOFT_ROLE_MAP;
-  if (!value) return {};
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(value);
-  } catch {
-    throw new Error("MICROSOFT_ROLE_MAP debe ser un objeto JSON válido.");
-  }
-
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new Error("MICROSOFT_ROLE_MAP debe ser un objeto de correos y roles.");
-  }
-
-  const entries = Object.entries(parsed);
-  if (
-    entries.some(
-      ([email, role]) =>
-        !email.includes("@") || !isAppRole(role),
-    )
-  ) {
-    throw new Error(
-      "MICROSOFT_ROLE_MAP contiene un correo o rol inválido. Roles: STUDENT, SECRETARY, ADMIN.",
-    );
-  }
-
-  return Object.fromEntries(
-    entries.map(([email, role]) => [email.trim().toLowerCase(), role]),
-  ) as Record<string, AppRole>;
-}
-
-const microsoftRoleMap = getMicrosoftRoleMap();
 const microsoftConfigured = Boolean(
   process.env.AUTH_MICROSOFT_ENTRA_ID_ID &&
     process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET &&
@@ -76,16 +21,14 @@ const microsoftConfigured = Boolean(
 const providers = [
   Credentials({
     id: "credentials",
-    name: "Cuenta de prueba",
+    name: "Correo y contraseña",
     credentials: {
-      email: { label: "Correo de prueba", type: "email" },
+      email: { label: "Correo", type: "email" },
       password: { label: "Contraseña", type: "password" },
     },
     async authorize(credentials) {
-      if (
-        process.env.NODE_ENV !== "development" ||
-        process.env.DEMO_AUTH_ENABLED !== "true"
-      ) {
+      if (process.env.PASSWORD_AUTH_ENABLED !== "true") {
+        logRejectedLogin("-", "PASSWORD_AUTH_ENABLED no está en true");
         return null;
       }
 
@@ -97,24 +40,39 @@ const providers = [
         typeof credentials.password === "string" ? credentials.password : "";
       if (!email || !password) return null;
 
-      const account = getDemoAccounts().find((item) => item.email === email);
-      if (!account) return null;
-
-      const passwordHash = Buffer.from(account.passwordHash, "base64").toString(
-        "utf8",
-      );
-      if (!/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(passwordHash)) {
+      const user = await findUserByEmail(email);
+      if (!user) {
+        logRejectedLogin(email, "no existe en la tabla users");
+        return null;
+      }
+      if (!user.is_active) {
+        logRejectedLogin(email, "la cuenta está desactivada");
+        return null;
+      }
+      if (!isAppRole(user.role)) {
+        logRejectedLogin(email, `el rol ${user.role} no tiene acceso al sistema`);
+        return null;
+      }
+      if (!/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(user.password_hash)) {
+        logRejectedLogin(email, "no tiene contraseña asignada (usa npm run db:password)");
         return null;
       }
 
-      const passwordMatches = await bcrypt.compare(password, passwordHash);
-      if (!passwordMatches) return null;
+      const passwordMatches = await bcrypt.compare(password, user.password_hash);
+      if (!passwordMatches) {
+        logRejectedLogin(
+          email,
+          `contraseña incorrecta (llegaron ${password.length} caracteres` +
+            `${password !== password.trim() ? ", con espacios al inicio o al final" : ""})`,
+        );
+        return null;
+      }
 
       return {
-        id: account.email,
-        email: account.email,
-        name: account.name,
-        role: account.role,
+        id: String(user.id),
+        email: user.email,
+        name: `${user.name} ${user.lastname}`,
+        role: user.role,
       };
     },
   }),
@@ -150,19 +108,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   jwt: { maxAge: 60 * 60 * 8 },
   pages: { signIn: "/" },
   callbacks: {
-    signIn({ user, account }) {
+    async signIn({ user, account }) {
       if (account?.provider !== "microsoft-entra-id") return true;
 
+      // Solo cuentas institucionales registradas y activas en la base.
       const email = user.email?.trim().toLowerCase();
-      const role = email ? microsoftRoleMap[email] : undefined;
-      if (!role) return false;
-      user.role = role;
-      return true;
+      const dbUser = email ? await findUserByEmail(email) : null;
+      return Boolean(dbUser?.is_active && isAppRole(dbUser.role));
     },
-    jwt({ token, user }) {
-      const email = token.email?.trim().toLowerCase();
-      if (user && isAppRole(user.role)) token.role = user.role;
-      if (email && microsoftRoleMap[email]) token.role = microsoftRoleMap[email];
+    async jwt({ token, user, account }) {
+      if (!user) return token;
+
+      if (account?.provider === "microsoft-entra-id") {
+        const email = user.email?.trim().toLowerCase();
+        const dbUser = email ? await findUserByEmail(email) : null;
+        if (dbUser && isAppRole(dbUser.role)) {
+          token.sub = String(dbUser.id);
+          token.role = dbUser.role;
+          token.name = `${dbUser.name} ${dbUser.lastname}`;
+        }
+      } else if (isAppRole(user.role)) {
+        token.role = user.role;
+      }
       return token;
     },
     session({ session, token }) {

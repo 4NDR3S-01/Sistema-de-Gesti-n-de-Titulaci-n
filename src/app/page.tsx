@@ -15,16 +15,23 @@ import {
 
 export default function Home() {
   const router = useRouter();
+
   const [mostrarClave, setMostrarClave] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
 
-  const demoHabilitado =
-    process.env.NEXT_PUBLIC_DEMO_AUTH_ENABLED === "true";
+  // Configuración de autenticación actualizada
+  const passwordEnabled =
+    process.env.NEXT_PUBLIC_PASSWORD_AUTH_ENABLED === "true";
 
+  const microsoftEnabled =
+    process.env.NEXT_PUBLIC_MICROSOFT_ENABLED === "true";
+
+  // Inicio de sesión con correo y contraseña
   async function iniciarSesion(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (cargando) return;
+
+    if (cargando || !passwordEnabled) return;
 
     setCargando(true);
     setError("");
@@ -47,8 +54,29 @@ export default function Home() {
       router.push(respuesta.url);
       router.refresh();
     } catch {
-      setError("No se pudo iniciar sesión. Inténtalo nuevamente.");
+      setError(
+        "No se pudo iniciar sesión. Inténtalo nuevamente."
+      );
     } finally {
+      setCargando(false);
+    }
+  }
+
+  // Inicio de sesión institucional con Microsoft
+  async function iniciarSesionMicrosoft() {
+    if (cargando || !microsoftEnabled) return;
+
+    setCargando(true);
+    setError("");
+
+    try {
+      await signIn("microsoft-entra-id", {
+        redirectTo: "/panel",
+      });
+    } catch {
+      setError(
+        "No se pudo iniciar sesión con Microsoft."
+      );
       setCargando(false);
     }
   }
@@ -63,15 +91,20 @@ export default function Home() {
 
           {/* ENCABEZADO */}
           <header className="flex items-center justify-between gap-4">
+
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#2563EB] text-white">
-                <GraduationCap size={27} strokeWidth={1.8} />
+                <GraduationCap
+                  size={27}
+                  strokeWidth={1.8}
+                />
               </div>
 
               <div>
                 <h1 className="text-xl font-extrabold leading-6">
                   ULEAM
                 </h1>
+
                 <p className="text-[10px] font-medium tracking-wide text-slate-500">
                   ACADEMIC PORTAL
                 </p>
@@ -81,13 +114,15 @@ export default function Home() {
             <div className="hidden rounded-full bg-[#EFF6FF] px-4 py-2 text-[11px] font-medium text-[#1D4ED8] sm:block">
               SISTEMA DE TITULACIÓN
             </div>
+
           </header>
 
-          {/* DOS COLUMNAS */}
+          {/* CONTENIDO EN DOS COLUMNAS */}
           <div className="mt-6 grid gap-5 lg:grid-cols-2">
 
             {/* PANEL IZQUIERDO */}
             <section className="flex flex-col rounded-2xl bg-[#EFF6FF] p-5 sm:p-7">
+
               <p className="text-xs font-semibold uppercase tracking-widest text-[#2563EB]">
                 TU CAMINO AL ÉXITO
               </p>
@@ -100,7 +135,7 @@ export default function Home() {
                 Tu proceso de titulación, simple y organizado.
               </p>
 
-              {/* ILUSTRACIÓN DE BIRRETE */}
+              {/* ILUSTRACIÓN DEL BIRRETE */}
               <div className="my-5 flex min-h-[250px] flex-1 items-center justify-center overflow-hidden rounded-xl bg-[#DBEAFE] p-4">
 
                 <svg
@@ -110,6 +145,7 @@ export default function Home() {
                   role="img"
                   aria-label="Birrete de graduación"
                 >
+
                   {/* CÍRCULO DE FONDO */}
                   <circle
                     cx="210"
@@ -173,27 +209,31 @@ export default function Home() {
                     fill="#2563EB"
                   />
 
-                  {/* PEQUEÑOS DETALLES */}
+                  {/* DETALLES DECORATIVOS */}
                   <path
                     d="M75 187 L94 205"
                     stroke="#93C5FD"
                     strokeWidth="4"
                   />
+
                   <path
                     d="M345 187 L326 205"
                     stroke="#93C5FD"
                     strokeWidth="4"
                   />
+
                 </svg>
               </div>
 
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                 Universidad Laica Eloy Alfaro de Manabí
               </p>
+
             </section>
 
-            {/* PANEL DERECHO: LOGIN */}
+            {/* PANEL DERECHO - LOGIN */}
             <section className="flex items-center justify-center px-1 py-8 sm:px-8 lg:py-10">
+
               <div className="w-full max-w-[430px]">
 
                 <p className="text-xs font-semibold uppercase tracking-widest text-[#2563EB]">
@@ -208,101 +248,168 @@ export default function Home() {
                   Ingresa para continuar.
                 </p>
 
-                <form onSubmit={iniciarSesion} className="mt-8 space-y-5">
+                {/* FORMULARIO DE INICIO DE SESIÓN */}
+                {passwordEnabled && (
+                  <form
+                    onSubmit={iniciarSesion}
+                    className="mt-8 space-y-5"
+                  >
 
-                  {/* CORREO */}
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="mb-2 block text-sm font-medium text-slate-700"
-                    >
-                      Correo electrónico
-                    </label>
+                    {/* CORREO ELECTRÓNICO */}
+                    <div>
+                      <label
+                        htmlFor="email"
+                        className="mb-2 block text-sm font-medium text-slate-700"
+                      >
+                        Correo electrónico
+                      </label>
 
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="username"
-                      placeholder="correo@institucion.edu.ec"
-                      required
-                      disabled={cargando}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 disabled:opacity-60"
-                    />
-                  </div>
-
-                  {/* CONTRASEÑA */}
-                  <div>
-                    <label
-                      htmlFor="password"
-                      className="mb-2 block text-sm font-medium text-slate-700"
-                    >
-                      Contraseña
-                    </label>
-
-                    <div className="relative">
                       <input
-                        id="password"
-                        name="password"
-                        type={mostrarClave ? "text" : "password"}
-                        autoComplete="current-password"
-                        placeholder="Ingresa tu contraseña"
+                        id="email"
+                        name="email"
+                        type="email"
+                        autoComplete="username"
+                        placeholder="correo@institucion.edu.ec"
                         required
                         disabled={cargando}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 pr-12 text-sm outline-none transition focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 disabled:opacity-60"
+                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 disabled:opacity-60"
                       />
+                    </div>
 
-                      <button
-                        type="button"
-                        aria-label={
-                          mostrarClave
-                            ? "Ocultar contraseña"
-                            : "Mostrar contraseña"
-                        }
-                        onClick={() => setMostrarClave(!mostrarClave)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-blue-600"
+                    {/* CONTRASEÑA */}
+                    <div>
+                      <label
+                        htmlFor="password"
+                        className="mb-2 block text-sm font-medium text-slate-700"
                       >
-                        {mostrarClave ? (
-                          <EyeOff size={19} />
-                        ) : (
-                          <Eye size={19} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
+                        Contraseña
+                      </label>
 
-                  {/* MENSAJE DE ERROR */}
-                  {error && (
-                    <div
-                      role="alert"
-                      className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600"
-                    >
-                      {error}
-                    </div>
-                  )}
+                      <div className="relative">
 
-                  {/* BOTÓN LOGIN */}
-                  <button
-                    type="submit"
-                    disabled={cargando || !demoHabilitado}
-                    className="flex w-full items-center justify-center gap-3 rounded-lg bg-[#2563EB] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {cargando ? (
-                      <>
-                        <LoaderCircle
-                          size={18}
-                          className="animate-spin"
+                        <input
+                          id="password"
+                          name="password"
+                          type={
+                            mostrarClave
+                              ? "text"
+                              : "password"
+                          }
+                          autoComplete="current-password"
+                          placeholder="Ingresa tu contraseña"
+                          required
+                          disabled={cargando}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 pr-12 text-sm outline-none transition focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 disabled:opacity-60"
                         />
-                        Ingresando...
-                      </>
-                    ) : (
-                      <>
-                        Acceder a mi cuenta
-                        <ArrowRight size={18} />
-                      </>
+
+                        <button
+                          type="button"
+                          aria-label={
+                            mostrarClave
+                              ? "Ocultar contraseña"
+                              : "Mostrar contraseña"
+                          }
+                          onClick={() =>
+                            setMostrarClave(!mostrarClave)
+                          }
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-blue-600"
+                        >
+                          {mostrarClave ? (
+                            <EyeOff size={19} />
+                          ) : (
+                            <Eye size={19} />
+                          )}
+                        </button>
+
+                      </div>
+                    </div>
+
+                    {/* MENSAJE DE ERROR */}
+                    {error && (
+                      <div
+                        role="alert"
+                        className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600"
+                      >
+                        {error}
+                      </div>
                     )}
-                  </button>
-                </form>
+
+                    {/* BOTÓN DE INICIAR SESIÓN */}
+                    <button
+                      type="submit"
+                      disabled={cargando}
+                      className="flex w-full items-center justify-center gap-3 rounded-lg bg-[#2563EB] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {cargando ? (
+                        <>
+                          <LoaderCircle
+                            size={18}
+                            className="animate-spin"
+                          />
+                          Ingresando...
+                        </>
+                      ) : (
+                        <>
+                          Acceder a mi cuenta
+                          <ArrowRight size={18} />
+                        </>
+                      )}
+                    </button>
+
+                  </form>
+                )}
+
+                {/* INICIO DE SESIÓN MICROSOFT */}
+                {microsoftEnabled && (
+                  <div className="mt-5">
+
+                    {passwordEnabled && (
+                      <div className="mb-5 flex items-center gap-3">
+                        <div className="h-px flex-1 bg-slate-200" />
+                        <span className="text-xs text-slate-400">
+                          O continúa con
+                        </span>
+                        <div className="h-px flex-1 bg-slate-200" />
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={iniciarSesionMicrosoft}
+                      disabled={cargando}
+                      className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-5 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                    >
+                      <span className="grid grid-cols-2 gap-[2px]">
+                        <span className="h-2 w-2 bg-[#F25022]" />
+                        <span className="h-2 w-2 bg-[#7FBA00]" />
+                        <span className="h-2 w-2 bg-[#00A4EF]" />
+                        <span className="h-2 w-2 bg-[#FFB900]" />
+                      </span>
+
+                      Continuar con Microsoft
+                    </button>
+
+                  </div>
+                )}
+
+                {/* ERROR GENERAL */}
+                {!passwordEnabled && error && (
+                  <p
+                    role="alert"
+                    className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600"
+                  >
+                    {error}
+                  </p>
+                )}
+
+                {/* SIN PROVEEDORES HABILITADOS */}
+                {!passwordEnabled && !microsoftEnabled && (
+                  <div className="mt-8 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                    No hay métodos de inicio de sesión
+                    habilitados. Revisa la configuración
+                    del sistema.
+                  </div>
+                )}
 
                 {/* ACCESO SEGURO */}
                 <div className="mt-7 flex items-center justify-center gap-2 text-xs text-slate-500">
@@ -313,13 +420,9 @@ export default function Home() {
                   Acceso protegido
                 </div>
 
-                {!demoHabilitado && (
-                  <p className="mt-4 text-center text-xs text-amber-700">
-                    El acceso de prueba está deshabilitado.
-                  </p>
-                )}
               </div>
             </section>
+
           </div>
         </div>
       </div>

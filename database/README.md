@@ -10,11 +10,27 @@ Este directorio contiene la estructura relacional, datos iniciales, vistas de co
 - **`seed.sql`**: Datos iniciales de prueba (roles por defecto, usuarios administradores, coordinadores, asesores, estudiantes, proyectos y trámites de ejemplo).
 - **`queries.sql`**: Archivo con consultas SQL útiles, reportes y seguimiento de trámites para operaciones comunes.
 - **`connection.js`**: Módulo de conexión reutilizable en Node.js utilizando el paquete `pg` (Pool de conexiones).
+- **`migrations/`**: Cambios incrementales sobre una base ya creada (por ejemplo, `001_secretaria_catalogos_estudiantes.sql`: rol `SECRETARY`, tablas `faculties` y `careers`, y cédula/semestre/celular del estudiante).
+- **`setup.mjs`** (`npm run db:setup`): crea la base si no existe, carga `schema.sql` y `seed.sql` cuando está vacía y aplica las migraciones pendientes (registradas en `schema_migrations`).
+- **`set-password.mjs`** (`npm run db:password -- correo`): asigna una contraseña bcrypt a un usuario.
+
+> La aplicación Next.js usa su propia conexión en `src/lib/db.ts`, que lee las mismas variables `DB_*` desde `.env.local`.
 - **`.env.example`**: Variables de entorno de ejemplo para la configuración de la conexión a la base de datos.
 
 ---
 
 ## 🚀 Instrucciones de Configuración
+
+### Opción rápida: script de Node.js
+Con las variables `DB_*` en `.env.local`, ejecuta en la raíz del proyecto:
+
+```bash
+npm run db:setup
+```
+
+Si tu base ya existía con el esquema anterior, este comando solo aplica las migraciones nuevas sin borrar datos.
+
+---
 
 ### Opción A: Usando Docker y Docker Compose (Recomendado)
 Si tienes Docker instalado, puedes levantar la base de datos con los esquemas y semillas cargados automáticamente ejecutando en la raíz del proyecto (`Sistema-de-Gesti-n-de-Titulaci-n/`):
