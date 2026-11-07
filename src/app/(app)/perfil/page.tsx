@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { updateOwnProfileAction } from "@/app/(app)/perfil/actions";
 import { StudentSelfForm } from "@/components/student-form";
 import { Alert, PageHeader } from "@/components/ui";
 import { requireUser } from "@/lib/current-user";
 import { getStudentByUserId } from "@/lib/data/students";
+
+export const metadata: Metadata = { title: "Mis datos" };
 
 export default async function ProfilePage() {
   const user = await requireUser(["STUDENT"]);
@@ -11,13 +14,13 @@ export default async function ProfilePage() {
   return (
     <>
       <PageHeader
-        eyebrow="MI CUENTA"
+        eyebrow="Mi cuenta"
         title="Mis datos"
-        description="Revisa y actualiza tu información personal y académica."
+        description="Mantén al día tus datos personales y de contacto. Se usan en el formato oficial de tu registro PAT 2."
       />
       {student ? (
         <div className="stack">
-          <Alert tone="info" title={`${student.career} · ${student.faculty}`}>
+          <Alert tone="info" title={`${student.career}, ${student.faculty}`}>
             Tu carrera, facultad, semestre y año de ingreso los registra
             secretaría académica. Si hay un error, comunícate con ellos.
           </Alert>

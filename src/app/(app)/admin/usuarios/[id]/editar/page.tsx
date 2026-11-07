@@ -1,10 +1,12 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { updateUserAction } from "@/app/(app)/admin/usuarios/actions";
-import { PageHeader } from "@/components/ui";
+import { BackLink, PageHeader } from "@/components/ui";
 import { UserForm } from "@/components/user-form";
 import { getDbRoleLabel } from "@/lib/auth-roles";
 import { getUserById } from "@/lib/data/users";
+
+export const metadata: Metadata = { title: "Editar usuario" };
 
 export default async function EditUserPage(
   props: PageProps<"/admin/usuarios/[id]/editar">,
@@ -22,11 +24,9 @@ export default async function EditUserPage(
 
   return (
     <>
-      <Link className="back-link" href="/admin/usuarios">
-        ← Volver a usuarios
-      </Link>
+      <BackLink href="/admin/usuarios">Volver a usuarios</BackLink>
       <PageHeader
-        eyebrow="ADMINISTRACIÓN"
+        eyebrow="Administración"
         title={`${user.name} ${user.lastname}`}
         description="Actualiza los datos, el rol o la contraseña de la cuenta."
       />

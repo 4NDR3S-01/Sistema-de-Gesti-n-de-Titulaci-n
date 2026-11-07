@@ -1,16 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createUserAction } from "@/app/(app)/admin/usuarios/actions";
-import { PageHeader } from "@/components/ui";
+import { BackLink, PageHeader } from "@/components/ui";
 import { UserForm } from "@/components/user-form";
+
+export const metadata: Metadata = { title: "Nuevo usuario" };
 
 export default function NewUserPage() {
   return (
     <>
-      <Link className="back-link" href="/admin/usuarios">
-        ← Volver a usuarios
-      </Link>
+      <BackLink href="/admin/usuarios">Volver a usuarios</BackLink>
       <PageHeader
-        eyebrow="ADMINISTRACIÓN"
+        eyebrow="Administración"
         title="Nuevo usuario"
         description={
           <>

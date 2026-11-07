@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { Field, FormMessage, SubmitButton } from "@/components/form-controls";
 import { initialFormState, type FormState } from "@/lib/form-state";
+import { STUDENT_EMAIL_DOMAIN } from "@/lib/institution";
 
 type CareerOption = { id: number; name: string; faculty: string };
 
@@ -48,7 +49,10 @@ function PersonalFields({
 }) {
   return (
     <fieldset className="form-group">
-      <legend>Datos personales</legend>
+      <div className="form-group-intro">
+        <h2>Datos personales</h2>
+        <p>Identificación y contacto, en el orden del formulario institucional.</p>
+      </div>
       <div className="form-grid">
         <Field label="Cédula" name="cedula" error={errors.cedula} hint="10 dígitos, sin guiones." required>
           <input id="cedula" name="cedula" defaultValue={value("cedula")} required inputMode="numeric" pattern="\d{10}" maxLength={10} />
@@ -59,8 +63,28 @@ function PersonalFields({
         <Field label="Apellidos" name="lastname" error={errors.lastname} required>
           <input id="lastname" name="lastname" defaultValue={value("lastname")} required maxLength={100} autoComplete="family-name" />
         </Field>
-        <Field label="Correo institucional" name="email" error={errors.email} hint="También se usa para iniciar sesión." required>
-          <input id="email" name="email" type="email" defaultValue={value("email")} required maxLength={150} autoComplete="email" />
+        <Field
+          label="Correo institucional"
+          name="email"
+          error={errors.email}
+          hint={
+            required
+              ? "Es tu cuenta de acceso; solo secretaría puede cambiarla."
+              : `Cuenta @${STUDENT_EMAIL_DOMAIN}; también sirve para iniciar sesión.`
+          }
+          required
+        >
+          <input
+            id="email"
+            name="email"
+            type="email"
+            defaultValue={value("email")}
+            required
+            readOnly={required}
+            maxLength={150}
+            autoComplete="email"
+            placeholder={`usuario@${STUDENT_EMAIL_DOMAIN}`}
+          />
         </Field>
         <Field label="Sexo" name="sex" error={errors.sex} required={required}>
           <select id="sex" name="sex" defaultValue={value("sex")} required={required}>
@@ -111,7 +135,10 @@ export function StudentForm({
       <PersonalFields value={value} errors={errors} required={false} />
 
       <fieldset className="form-group">
-        <legend>Datos académicos</legend>
+        <div className="form-group-intro">
+          <h2>Datos académicos</h2>
+          <p>Carrera, nivel y año de ingreso. Solo secretaría puede cambiarlos.</p>
+        </div>
         <div className="form-grid">
           <Field label="Carrera" name="careerId" error={errors.careerId} required>
             <select id="careerId" name="careerId" defaultValue={value("careerId")} required>
@@ -147,7 +174,10 @@ export function StudentForm({
 
       {mode === "create" && (
         <fieldset className="form-group">
-          <legend>Acceso al sistema</legend>
+          <div className="form-group-intro">
+            <h2>Acceso al sistema</h2>
+            <p>Contraseña con la que el estudiante iniciará sesión la primera vez.</p>
+          </div>
           <div className="form-grid">
             <Field label="Contraseña inicial" name="password" error={errors.password} hint="Mínimo 8 caracteres. Compártela de forma segura con el estudiante." required>
               <input id="password" name="password" type="password" required minLength={8} maxLength={72} autoComplete="new-password" />

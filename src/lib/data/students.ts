@@ -216,14 +216,16 @@ export async function updateStudentByStaff(
 /** Actualización hecha por el propio estudiante (formulario institucional). */
 export async function updateStudentSelf(
   userId: number,
-  data: Pick<StudentInput, "cedula" | "name" | "lastname" | "email" | "curriculumChanges"> &
+  data: Pick<StudentInput, "cedula" | "name" | "lastname" | "curriculumChanges"> &
     Required<Pick<StudentInput, "sex" | "personalEmail" | "address" | "landline" | "phone">>,
 ): Promise<void> {
   await withTransaction(async (client) => {
-    await client.query(
-      "UPDATE users SET name = $1, lastname = $2, email = $3 WHERE id = $4",
-      [data.name, data.lastname, data.email, userId],
-    );
+    // El correo institucional es la cuenta de acceso: solo lo cambia secretaría.
+    await client.query("UPDATE users SET name = $1, lastname = $2 WHERE id = $3", [
+      data.name,
+      data.lastname,
+      userId,
+    ]);
     await client.query(
       `UPDATE students
        SET cedula = $1, phone = $2, sex = $3, personal_email = $4, address = $5,

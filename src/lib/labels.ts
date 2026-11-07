@@ -40,3 +40,39 @@ export function statusTone(value: string): "neutral" | "success" | "warning" | "
   if (["PENDING", "PROPOSED"].includes(value)) return "warning";
   return "neutral";
 }
+
+const patStatusLabels: Record<string, string> = {
+  DRAFT: "Borrador",
+  PENDING: "En revisión",
+  RETURNED: "Devuelto con observaciones",
+  APPROVED: "Aprobado",
+};
+
+export const patStatusLabel = (value: string) => patStatusLabels[value] ?? humanize(value);
+
+export function patStatusTone(value: string): "warning" | "danger" | "success" | "neutral" {
+  if (value === "PENDING") return "warning";
+  if (value === "RETURNED") return "danger";
+  if (value === "APPROVED") return "success";
+  return "neutral";
+}
+
+/** Fecha AAAA-MM-DD en formato largo, sin desfase de zona horaria. */
+export function longDate(value: string): string {
+  const [y, m, d] = value.split("-").map(Number);
+  return new Intl.DateTimeFormat("es-EC", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(y, m - 1, d)));
+}
+
+export function shortDateTime(value: Date): string {
+  return new Intl.DateTimeFormat("es-EC", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "America/Guayaquil",
+  }).format(value);
+}

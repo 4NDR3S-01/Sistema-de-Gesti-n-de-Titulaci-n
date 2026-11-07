@@ -1,5 +1,15 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  CircleAlert,
+  CircleCheck,
+  Info,
+  TriangleAlert,
+  type LucideIcon,
+} from "lucide-react";
 
 export function PageHeader({
   eyebrow,
@@ -7,7 +17,7 @@ export function PageHeader({
   description,
   actions,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   description?: ReactNode;
   actions?: ReactNode;
@@ -15,7 +25,7 @@ export function PageHeader({
   return (
     <header className="page-header">
       <div>
-        <span className="page-eyebrow">{eyebrow}</span>
+        {eyebrow && <span className="page-eyebrow">{eyebrow}</span>}
         <h1>{title}</h1>
         {description && <p>{description}</p>}
       </div>
@@ -23,6 +33,22 @@ export function PageHeader({
     </header>
   );
 }
+
+export function BackLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link className="back-link" href={href}>
+      <ArrowLeft aria-hidden="true" />
+      {children}
+    </Link>
+  );
+}
+
+const alertIcons: Record<string, LucideIcon> = {
+  success: CircleCheck,
+  error: CircleAlert,
+  warning: TriangleAlert,
+  info: Info,
+};
 
 export function Alert({
   tone,
@@ -33,8 +59,10 @@ export function Alert({
   title?: string;
   children?: ReactNode;
 }) {
+  const Icon = alertIcons[tone];
   return (
     <div className={`alert alert-${tone}`} role={tone === "error" ? "alert" : "status"}>
+      <Icon aria-hidden="true" />
       {title && <strong>{title}</strong>}
       {children && <span>{children}</span>}
     </div>
@@ -42,19 +70,21 @@ export function Alert({
 }
 
 export function EmptyState({
-  icon,
+  icon: Icon,
   title,
   children,
   action,
 }: {
-  icon: string;
+  icon: LucideIcon;
   title: string;
   children?: ReactNode;
   action?: ReactNode;
 }) {
   return (
     <section className="empty-state">
-      <span className="empty-state-icon" aria-hidden="true">{icon}</span>
+      <span className="empty-state-icon" aria-hidden="true">
+        <Icon />
+      </span>
       <h2>{title}</h2>
       {children && <p>{children}</p>}
       {action}
@@ -101,21 +131,25 @@ export function Pagination({
   return (
     <nav className="pagination" aria-label="Paginación">
       {page > 1 ? (
-        <Link className="btn btn-ghost btn-sm" href={href(page - 1)}>
-          ← Anterior
+        <Link className="btn btn-secondary btn-sm" href={href(page - 1)}>
+          <ChevronLeft aria-hidden="true" /> Anterior
         </Link>
       ) : (
-        <span className="btn btn-ghost btn-sm is-disabled">← Anterior</span>
+        <span className="btn btn-secondary btn-sm is-disabled">
+          <ChevronLeft aria-hidden="true" /> Anterior
+        </span>
       )}
       <span className="pagination-info">
         Página {page} de {pages}
       </span>
       {page < pages ? (
-        <Link className="btn btn-ghost btn-sm" href={href(page + 1)}>
-          Siguiente →
+        <Link className="btn btn-secondary btn-sm" href={href(page + 1)}>
+          Siguiente <ChevronRight aria-hidden="true" />
         </Link>
       ) : (
-        <span className="btn btn-ghost btn-sm is-disabled">Siguiente →</span>
+        <span className="btn btn-secondary btn-sm is-disabled">
+          Siguiente <ChevronRight aria-hidden="true" />
+        </span>
       )}
     </nav>
   );

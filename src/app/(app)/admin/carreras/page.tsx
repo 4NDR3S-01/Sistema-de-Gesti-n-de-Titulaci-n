@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { Building2, GraduationCap, Plus } from "lucide-react";
 import {
   createCareerAction,
   createFacultyAction,
@@ -31,6 +33,8 @@ const errorMessages: Record<string, string> = {
   desconocido: "No se pudo completar la operación. Inténtalo de nuevo.",
 };
 
+export const metadata: Metadata = { title: "Carreras y facultades" };
+
 export default async function CatalogsPage(props: PageProps<"/admin/carreras">) {
   const params = await props.searchParams;
   const ok = searchParam(params.ok);
@@ -40,7 +44,7 @@ export default async function CatalogsPage(props: PageProps<"/admin/carreras">) 
   return (
     <>
       <PageHeader
-        eyebrow="ADMINISTRACIÓN"
+        eyebrow="Administración"
         title="Carreras y facultades"
         description="Catálogo usado al registrar y editar estudiantes. Desactiva un registro para ocultarlo sin perder el historial."
       />
@@ -48,11 +52,11 @@ export default async function CatalogsPage(props: PageProps<"/admin/carreras">) 
       {ok && flashMessages[ok] && <Alert tone="success">{flashMessages[ok]}</Alert>}
       {error && errorMessages[error] && <Alert tone="error">{errorMessages[error]}</Alert>}
 
-      <div className="catalog-grid">
+      <div className="catalog-grid" style={{ marginTop: ok || error ? 20 : 0 }}>
         <section className="panel-card" aria-labelledby="faculties-title">
           <header className="panel-card-head">
             <h2 id="faculties-title">Facultades</h2>
-            <Badge>{faculties.length}</Badge>
+            <span className="text-muted tabular" style={{ fontSize: 13 }}>{faculties.length}</span>
           </header>
 
           <form className="inline-form" action={createFacultyAction}>
@@ -60,11 +64,13 @@ export default async function CatalogsPage(props: PageProps<"/admin/carreras">) 
               Nombre de la nueva facultad
             </label>
             <input id="new-faculty" name="name" placeholder="Nueva facultad" required minLength={3} maxLength={150} />
-            <SubmitButton pendingLabel="Agregando…">Agregar</SubmitButton>
+            <SubmitButton pendingLabel="Agregando…">
+              <Plus aria-hidden="true" /> Agregar
+            </SubmitButton>
           </form>
 
           {faculties.length === 0 ? (
-            <EmptyState icon="0" title="Sin facultades">
+            <EmptyState icon={Building2} title="Sin facultades">
               Agrega la primera facultad.
             </EmptyState>
           ) : (
@@ -78,7 +84,7 @@ export default async function CatalogsPage(props: PageProps<"/admin/carreras">) 
                         {faculty.career_count} carreras · {faculty.student_count} estudiantes
                       </small>
                     </div>
-                    {!faculty.is_active && <Badge>Inactiva</Badge>}
+                    {!faculty.is_active && <Badge tone="danger">Inactiva</Badge>}
                   </div>
                   <details className="catalog-edit">
                     <summary>Editar</summary>
@@ -87,7 +93,7 @@ export default async function CatalogsPage(props: PageProps<"/admin/carreras">) 
                         Nombre
                       </label>
                       <input id={`faculty-${faculty.id}`} name="name" defaultValue={faculty.name} required minLength={3} maxLength={150} />
-                      <SubmitButton>Guardar</SubmitButton>
+                      <SubmitButton className="btn btn-primary btn-sm">Guardar</SubmitButton>
                     </form>
                     <div className="catalog-actions">
                       <form action={setFacultyActiveAction.bind(null, faculty.id, !faculty.is_active)}>
@@ -121,7 +127,7 @@ export default async function CatalogsPage(props: PageProps<"/admin/carreras">) 
         <section className="panel-card" aria-labelledby="careers-title">
           <header className="panel-card-head">
             <h2 id="careers-title">Carreras</h2>
-            <Badge>{careers.length}</Badge>
+            <span className="text-muted tabular" style={{ fontSize: 13 }}>{careers.length}</span>
           </header>
 
           {faculties.length === 0 ? (
@@ -145,12 +151,14 @@ export default async function CatalogsPage(props: PageProps<"/admin/carreras">) 
                   </option>
                 ))}
               </select>
-              <SubmitButton pendingLabel="Agregando…">Agregar</SubmitButton>
+              <SubmitButton pendingLabel="Agregando…">
+              <Plus aria-hidden="true" /> Agregar
+            </SubmitButton>
             </form>
           )}
 
           {careers.length === 0 ? (
-            <EmptyState icon="0" title="Sin carreras">
+            <EmptyState icon={GraduationCap} title="Sin carreras">
               Agrega la primera carrera.
             </EmptyState>
           ) : (
@@ -164,7 +172,7 @@ export default async function CatalogsPage(props: PageProps<"/admin/carreras">) 
                         {career.faculty} · {career.student_count} estudiantes
                       </small>
                     </div>
-                    {!career.is_active && <Badge>Inactiva</Badge>}
+                    {!career.is_active && <Badge tone="danger">Inactiva</Badge>}
                   </div>
                   <details className="catalog-edit">
                     <summary>Editar</summary>
@@ -183,7 +191,7 @@ export default async function CatalogsPage(props: PageProps<"/admin/carreras">) 
                           </option>
                         ))}
                       </select>
-                      <SubmitButton>Guardar</SubmitButton>
+                      <SubmitButton className="btn btn-primary btn-sm">Guardar</SubmitButton>
                     </form>
                     <div className="catalog-actions">
                       <form action={setCareerActiveAction.bind(null, career.id, !career.is_active)}>

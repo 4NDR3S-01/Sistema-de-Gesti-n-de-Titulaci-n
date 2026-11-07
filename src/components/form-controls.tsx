@@ -2,6 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 import type { ReactNode } from "react";
+import { CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
 import type { FormState } from "@/lib/form-state";
 
 export function Field({
@@ -56,7 +57,14 @@ export function SubmitButton({
   const { pending } = useFormStatus();
   return (
     <button className={className} type="submit" disabled={pending}>
-      {pending ? pendingLabel : children}
+      {pending ? (
+        <>
+          <LoaderCircle className="spin" aria-hidden="true" />
+          {pendingLabel}
+        </>
+      ) : (
+        children
+      )}
     </button>
   );
 }
@@ -68,7 +76,8 @@ export function FormMessage({ state }: { state: FormState }) {
       className={`alert alert-${state.status === "success" ? "success" : "error"}`}
       role={state.status === "error" ? "alert" : "status"}
     >
-      <span>{state.message}</span>
+      {state.status === "success" ? <CircleCheck aria-hidden="true" /> : <CircleAlert aria-hidden="true" />}
+      <strong>{state.message}</strong>
     </div>
   );
 }
@@ -77,10 +86,12 @@ export function FormMessage({ state }: { state: FormState }) {
 export function ConfirmButton({
   message,
   className,
+  disabled,
   children,
 }: {
   message: string;
   className: string;
+  disabled?: boolean;
   children: ReactNode;
 }) {
   const { pending } = useFormStatus();
@@ -88,11 +99,12 @@ export function ConfirmButton({
     <button
       className={className}
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       onClick={(event) => {
         if (!window.confirm(message)) event.preventDefault();
       }}
     >
+      {pending ? <LoaderCircle className="spin" aria-hidden="true" /> : null}
       {children}
     </button>
   );

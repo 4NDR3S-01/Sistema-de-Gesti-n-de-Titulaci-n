@@ -28,7 +28,10 @@ export function UserForm({
       <FormMessage state={state} />
 
       <fieldset className="form-group">
-        <legend>Datos del usuario</legend>
+        <div className="form-group-intro">
+          <h2>Datos del usuario</h2>
+          <p>Nombre, correo de acceso y rol dentro del sistema.</p>
+        </div>
         <div className="form-grid">
           <Field label="Nombres" name="name" error={errors.name}>
             <input id="name" name="name" defaultValue={value("name")} required maxLength={100} />
@@ -36,8 +39,8 @@ export function UserForm({
           <Field label="Apellidos" name="lastname" error={errors.lastname}>
             <input id="lastname" name="lastname" defaultValue={value("lastname")} required maxLength={100} />
           </Field>
-          <Field label="Correo electrónico" name="email" error={errors.email}>
-            <input id="email" name="email" type="email" defaultValue={value("email")} required maxLength={150} />
+          <Field label="Correo institucional" name="email" error={errors.email} hint="Cuenta @uleam.edu.ec del funcionario.">
+            <input id="email" name="email" type="email" defaultValue={value("email")} required maxLength={150} placeholder="nombre.apellido@uleam.edu.ec" />
           </Field>
           <Field
             label="Rol"
@@ -57,7 +60,10 @@ export function UserForm({
       </fieldset>
 
       <fieldset className="form-group">
-        <legend>{mode === "create" ? "Acceso" : "Restablecer contraseña"}</legend>
+        <div className="form-group-intro">
+          <h2>{mode === "create" ? "Acceso" : "Restablecer contraseña"}</h2>
+          <p>{mode === "create" ? "Mínimo 8 caracteres. Compártela de forma segura." : "Déjala vacía para mantener la contraseña actual."}</p>
+        </div>
         <div className="form-grid">
           <Field
             label={mode === "create" ? "Contraseña inicial" : "Nueva contraseña"}

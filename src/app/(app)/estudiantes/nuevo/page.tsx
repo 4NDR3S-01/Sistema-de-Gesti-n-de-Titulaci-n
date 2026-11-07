@@ -1,19 +1,19 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 import { createStudentAction } from "@/app/(app)/estudiantes/actions";
 import { StudentForm } from "@/components/student-form";
-import { Alert, PageHeader } from "@/components/ui";
+import { Alert, BackLink, PageHeader } from "@/components/ui";
 import { listCareers } from "@/lib/data/catalogs";
+
+export const metadata: Metadata = { title: "Nuevo estudiante" };
 
 export default async function NewStudentPage() {
   const careers = await listCareers({ onlyActive: true });
 
   return (
     <>
-      <Link className="back-link" href="/estudiantes">
-        ← Volver a estudiantes
-      </Link>
+      <BackLink href="/estudiantes">Volver a estudiantes</BackLink>
       <PageHeader
-        eyebrow="GESTIÓN ACADÉMICA"
+        eyebrow="Gestión académica"
         title="Nuevo estudiante"
         description="Registra al estudiante y crea su cuenta de acceso al sistema."
       />

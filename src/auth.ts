@@ -3,7 +3,9 @@ import Credentials from "next-auth/providers/credentials";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import bcrypt from "bcryptjs";
 import { isAppRole } from "@/lib/auth-roles";
-import { findUserByEmail } from "@/lib/data/users";
+import { findUserByCedula, findUserByEmail, syncUserNames } from "@/lib/data/users";
+import { syncStudentFromDirectory } from "@/lib/directory";
+import { isInstitutionalEmail, parseLoginIdentifier } from "@/lib/institution";
 
 /** En desarrollo, explica en la consola del servidor por qué se rechazó un login. */
 function logRejectedLogin(email: string, reason: string) {
@@ -12,18 +14,19 @@ function logRejectedLogin(email: string, reason: string) {
   }
 }
 
-const microsoftConfigured = Boolean(
-  process.env.AUTH_MICROSOFT_ENTRA_ID_ID &&
-    process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET &&
-    process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER,
+/** Tenant de Microsoft 365 de la ULEAM (live.uleam.edu.ec y uleam.edu.ec). */
+const ULEAM_ISSUER = "https://login.microsoftonline.com/31a17900-7589-4cfc-b11a-f4e83c27b8ed/v2.0";
+
+export const microsoftConfigured = Boolean(
+  process.env.AUTH_MICROSOFT_ENTRA_ID_ID && process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
 );
 
 const providers = [
   Credentials({
     id: "credentials",
-    name: "Correo y contraseña",
+    name: "Correo institucional o cédula",
     credentials: {
-      email: { label: "Correo", type: "email" },
+      identifier: { label: "Correo institucional o cédula", type: "text" },
       password: { label: "Contraseña", type: "password" },
     },
     async authorize(credentials) {
@@ -32,17 +35,25 @@ const providers = [
         return null;
       }
 
-      const email =
-        typeof credentials.email === "string"
-          ? credentials.email.trim().toLowerCase()
-          : "";
+      const identifier = parseLoginIdentifier(
+        typeof credentials.identifier === "string" ? credentials.identifier : "",
+      );
       const password =
         typeof credentials.password === "string" ? credentials.password : "";
-      if (!email || !password) return null;
+      if (!identifier || !password) return null;
+      const email = identifier.value;
 
-      const user = await findUserByEmail(email);
+      if (identifier.kind === "email" && !isInstitutionalEmail(email)) {
+        logRejectedLogin(email, "el correo no pertenece a un dominio institucional");
+        return null;
+      }
+
+      const user =
+        identifier.kind === "cedula"
+          ? await findUserByCedula(identifier.value)
+          : await findUserByEmail(identifier.value);
       if (!user) {
-        logRejectedLogin(email, "no existe en la tabla users");
+        logRejectedLogin(email, `no existe (${identifier.kind === "cedula" ? "ninguna ficha con esa cédula" : "tabla users"})`);
         return null;
       }
       if (!user.is_active) {
@@ -81,7 +92,14 @@ const providers = [
         MicrosoftEntraID({
           clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID!,
           clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET!,
-          issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER!,
+          issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER || ULEAM_ISSUER,
+          authorization: {
+            params: {
+              scope: "openid profile email User.Read",
+              prompt: "select_account",
+              domain_hint: "uleam.edu.ec",
+            },
+          },
           profile(profile) {
             return {
               id: profile.sub,
@@ -113,19 +131,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       // Solo cuentas institucionales registradas y activas en la base.
       const email = user.email?.trim().toLowerCase();
-      const dbUser = email ? await findUserByEmail(email) : null;
+      if (!email || !isInstitutionalEmail(email)) return false;
+      const dbUser = await findUserByEmail(email);
       return Boolean(dbUser?.is_active && isAppRole(dbUser.role));
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, profile }) {
       if (!user) return token;
 
       if (account?.provider === "microsoft-entra-id") {
         const email = user.email?.trim().toLowerCase();
         const dbUser = email ? await findUserByEmail(email) : null;
         if (dbUser && isAppRole(dbUser.role)) {
+          // El directorio de la universidad es la fuente oficial del nombre.
+          const givenName = typeof profile?.given_name === "string" ? profile.given_name.trim() : "";
+          const familyName = typeof profile?.family_name === "string" ? profile.family_name.trim() : "";
+          if (givenName && familyName) await syncUserNames(dbUser.id, givenName, familyName);
+          // Completa la ficha del estudiante con su perfil del directorio (Microsoft Graph).
+          if (dbUser.role === "STUDENT" && account.access_token) {
+            await syncStudentFromDirectory(dbUser.id, account.access_token);
+          }
           token.sub = String(dbUser.id);
           token.role = dbUser.role;
-          token.name = `${dbUser.name} ${dbUser.lastname}`;
+          token.name = givenName && familyName
+            ? `${givenName} ${familyName}`
+            : `${dbUser.name} ${dbUser.lastname}`;
         }
       } else if (isAppRole(user.role)) {
         token.role = user.role;

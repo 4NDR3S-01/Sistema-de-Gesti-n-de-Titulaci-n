@@ -36,6 +36,27 @@ export async function findUserByEmail(email: string): Promise<LoginUser | null> 
   return row ?? null;
 }
 
+/** Usuario de un estudiante a partir de su cédula. */
+export async function findUserByCedula(cedula: string): Promise<LoginUser | null> {
+  const [row] = await query<LoginUser>(
+    `SELECT u.id, u.name, u.lastname, u.email, u.password_hash, u.is_active, r.name AS role
+     FROM students s
+     JOIN users u ON u.id = s.user_id
+     JOIN roles r ON r.id = u.role_id
+     WHERE s.cedula = $1`,
+    [cedula],
+  );
+  return row ?? null;
+}
+
+/** Actualiza nombres y apellidos con los del perfil institucional de Microsoft. */
+export async function syncUserNames(id: number, name: string, lastname: string): Promise<void> {
+  await query(
+    "UPDATE users SET name = $1, lastname = $2 WHERE id = $3 AND (name <> $1 OR lastname <> $2)",
+    [name.slice(0, 100), lastname.slice(0, 100), id],
+  );
+}
+
 export async function listUsers(filters: {
   search?: string;
   role?: string;
@@ -141,4 +162,25 @@ export async function countActiveAdmins(): Promise<number> {
      WHERE r.name = 'ADMIN' AND u.is_active`,
   );
   return total;
+}
+
+const BCRYPT_HASH = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/;
+
+/** ¿La cuenta tiene una contraseña propia? (las cuentas solo-Microsoft no). */
+export async function hasLocalPassword(id: number): Promise<boolean> {
+  const [row] = await query<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = $1", [id]);
+  return Boolean(row && BCRYPT_HASH.test(row.password_hash));
+}
+
+/** Cambia la contraseña si la actual es correcta. */
+export async function changeOwnPassword(
+  id: number,
+  current: string,
+  next: string,
+): Promise<"ok" | "wrong-current" | "no-password"> {
+  const [row] = await query<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = $1", [id]);
+  if (!row || !BCRYPT_HASH.test(row.password_hash)) return "no-password";
+  if (!(await bcrypt.compare(current, row.password_hash))) return "wrong-current";
+  await query("UPDATE users SET password_hash = $1 WHERE id = $2", [await bcrypt.hash(next, 12), id]);
+  return "ok";
 }

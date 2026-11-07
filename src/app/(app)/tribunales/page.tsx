@@ -1,160 +1,116 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { CalendarDays, Gavel } from "lucide-react";
+import { createTribunalAction, deleteTribunalAction } from "@/app/(app)/tribunales/actions";
+import { ConfirmButton } from "@/components/form-controls";
+import { TribunalForm } from "@/components/tribunal-form";
+import { Alert, EmptyState, PageHeader, searchParam } from "@/components/ui";
+import { listApprovedWithoutTribunal, listTribunals } from "@/lib/data/tribunals";
+import { longDate } from "@/lib/labels";
 
-export default function TribunalPage() {
-  const [message, setMessage] = useState("");
+export const metadata: Metadata = { title: "Tribunales de defensa" };
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const names = [
-      formData.get("president")?.toString().trim(),
-      formData.get("memberOne")?.toString().trim(),
-      formData.get("memberTwo")?.toString().trim(),
-    ];
-    const normalizedNames = names.map((name) => name?.toLocaleLowerCase());
-    const tutor = formData.get("tutor")?.toString().trim().toLocaleLowerCase();
+const flashMessages: Record<string, string> = {
+  asignado: "Tribunal asignado. Los integrantes ya ven la convocatoria en su panel.",
+  eliminado: "Convocatoria eliminada. El tema vuelve a la lista de pendientes.",
+};
 
-    if (new Set(normalizedNames).size !== normalizedNames.length) {
-      setMessage("Los tres integrantes del tribunal deben ser personas distintas.");
-      return;
-    }
-
-    if (tutor && normalizedNames.includes(tutor)) {
-      setMessage(
-        "El/la tutor/a participa como observador/a y no puede integrar el tribunal.",
-      );
-      return;
-    }
-
-    const student = formData.get("student")?.toString().trim();
-    const date = formData.get("defenseDate")?.toString();
-    const time = formData.get("defenseTime")?.toString();
-    const place = formData.get("place")?.toString().trim();
-    setMessage(
-      `Borrador preparado para ${student}, el ${date} a las ${time} en ${place}. No se guarda ni se envía.`,
-    );
-  }
+export default async function TribunalPage(props: PageProps<"/tribunales">) {
+  const params = await props.searchParams;
+  const ok = searchParam(params.ok);
+  const preselected = Number(searchParam(params.registro)) || undefined;
+  const [candidates, tribunals] = await Promise.all([listApprovedWithoutTribunal(), listTribunals()]);
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Guayaquil" }).format(new Date());
 
   return (
-    <section className="workflow-content">
-      <Link className="back-link" href="/panel">← Volver al panel</Link>
-      <div className="workflow-title-row">
-        <div>
-          <span className="workflow-eyebrow">DEFENSA DE TITULACIÓN · BORRADOR</span>
-          <h1>Convocatoria y tribunal</h1>
-          <p>
-            Prepara una vista preliminar con los datos de la convocatoria y
-            los integrantes indicados en el memorándum compartido.
-          </p>
-        </div>
-        <span className="draft-badge">Prototipo frontend</span>
-      </div>
+    <div className="stack">
+      <PageHeader
+        eyebrow="Secretaría"
+        title="Tribunales de defensa"
+        description="Asigna el tribunal y la convocatoria de los estudiantes con tema aprobado."
+      />
 
-      <div className="privacy-notice" role="note">
-        <strong>Referencia del memorándum</strong>
-        <span>
-          El tribunal tiene tres integrantes: decano/a o delegado/a que
-          preside y dos docentes de la carrera con título de cuarto nivel.
-          El/la tutor/a participa como observador/a, sin integrar el tribunal.
-        </span>
-      </div>
+      {ok && flashMessages[ok] && <Alert tone="success">{flashMessages[ok]}</Alert>}
 
-      <form className="record-form" onSubmit={handleSubmit}>
-        <section className="form-section" aria-labelledby="defense-section">
-          <div className="section-heading">
-            <span className="section-number">01</span>
-            <div>
-              <h2 id="defense-section">Datos de la defensa</h2>
-              <p>Información básica para redactar la convocatoria.</p>
-            </div>
-          </div>
-          <div className="field-grid">
-            <label className="form-field">
-              Estudiante
-              <input name="student" required />
-            </label>
-            <label className="form-field">
-              Carrera
-              <input name="career" required />
-            </label>
-            <label className="form-field field-full">
-              Tema del trabajo de titulación
-              <input name="topic" required />
-            </label>
-            <label className="form-field">
-              Fecha
-              <input name="defenseDate" type="date" required />
-            </label>
-            <label className="form-field">
-              Hora
-              <input name="defenseTime" type="time" required />
-            </label>
-            <label className="form-field">
-              Lugar
-              <input name="place" required />
-            </label>
-            <label className="form-field">
-              Tutor/a (participa como observador/a)
-              <input name="tutor" required />
-            </label>
-          </div>
+      {candidates.length === 0 ? (
+        <section className="panel-card">
+          <EmptyState icon={Gavel} title="No hay temas esperando tribunal">
+            Cuando apruebes un registro PAT 2 podrás asignar aquí su tribunal.{" "}
+            <Link href="/aprobacion-pat-2">Ir a la bandeja de aprobación</Link>.
+          </EmptyState>
         </section>
+      ) : (
+        <TribunalForm
+          action={createTribunalAction}
+          candidates={candidates}
+          preselected={preselected}
+          minDate={today}
+        />
+      )}
 
-        <section className="form-section" aria-labelledby="jury-section">
-          <div className="section-heading">
-            <span className="section-number">02</span>
-            <div>
-              <h2 id="jury-section">Integrantes del tribunal</h2>
-              <p>Registrar tres personas distintas según las reglas indicadas.</p>
-            </div>
+      <section className="panel-card" aria-labelledby="assigned-title">
+        <header className="panel-card-head">
+          <h2 id="assigned-title">Convocatorias registradas</h2>
+          <span className="text-muted tabular" style={{ fontSize: 13 }}>
+            {tribunals.length}
+          </span>
+        </header>
+        {tribunals.length === 0 ? (
+          <EmptyState icon={CalendarDays} title="Sin convocatorias">
+            Las defensas que programes aparecerán aquí ordenadas por fecha.
+          </EmptyState>
+        ) : (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Estudiante</th>
+                  <th scope="col">Defensa</th>
+                  <th scope="col">Tribunal</th>
+                  <th scope="col">
+                    <span className="sr-only">Acciones</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {tribunals.map((row) => (
+                  <tr key={row.id}>
+                    <td data-label="Estudiante" className="cell-title">
+                      <strong style={{ fontWeight: 600 }}>{row.student_name}</strong>
+                      <small>{row.title}</small>
+                    </td>
+                    <td data-label="Defensa">
+                      <span style={{ color: row.defense_date < today ? "var(--muted)" : undefined }}>
+                        {longDate(row.defense_date)}
+                      </span>
+                      <small>
+                        {row.defense_time}, {row.place}
+                      </small>
+                    </td>
+                    <td data-label="Tribunal">
+                      {row.president}
+                      <small>
+                        {row.member_one}; {row.member_two}
+                      </small>
+                      <small>Observador/a: {row.tutor}</small>
+                    </td>
+                    <td className="cell-actions">
+                      <form action={deleteTribunalAction.bind(null, row.id)}>
+                        <ConfirmButton
+                          className="btn btn-danger-ghost btn-sm"
+                          message={`¿Eliminar la convocatoria de ${row.student_name}? Podrás asignarla de nuevo.`}
+                        >
+                          Eliminar
+                        </ConfirmButton>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="field-grid">
-            <label className="form-field field-full">
-              Presidencia · Decano/a de la facultad, sede o extensión, o su delegado/a
-              <input name="president" required />
-            </label>
-            <label className="form-field">
-              Docente de la carrera · miembro 1
-              <input name="memberOne" required />
-            </label>
-            <label className="form-field">
-              Docente de la carrera · miembro 2
-              <input name="memberTwo" required />
-            </label>
-          </div>
-          <fieldset className="check-fieldset">
-            <legend>Confirmación de requisitos</legend>
-            <div className="checkbox-list">
-              <label>
-                <input type="checkbox" name="presidentConfirmed" required />
-                La presidencia corresponde al decano/a o delegado/a.
-              </label>
-              <label>
-                <input type="checkbox" name="membersConfirmed" required />
-                Los otros dos integrantes son docentes de la carrera con título de cuarto nivel.
-              </label>
-              <label>
-                <input type="checkbox" name="tutorObserver" required />
-                El/la tutor/a consta solo como observador/a y no como evaluador/a.
-              </label>
-            </div>
-          </fieldset>
-          <p className="inline-guidance">
-            Según el documento, si un miembro no asiste debe designarse un
-            reemplazo de manera inmediata.
-          </p>
-        </section>
-
-        <div className="form-submit-row">
-          <p className="form-message" role="status" aria-live="polite">{message}</p>
-          <button className="primary-action" type="submit">
-            Preparar borrador <span aria-hidden="true">→</span>
-          </button>
-        </div>
-      </form>
-    </section>
+        )}
+      </section>
+    </div>
   );
 }

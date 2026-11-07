@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { Search, UserPlus, Users } from "lucide-react";
 import { setUserActiveAction } from "@/app/(app)/admin/usuarios/actions";
 import { ConfirmButton } from "@/components/form-controls";
 import {
@@ -35,6 +37,8 @@ const roleFilters = [
   { value: "ADVISOR", label: "Docente asesor" },
 ];
 
+export const metadata: Metadata = { title: "Usuarios" };
+
 export default async function UsersPage(props: PageProps<"/admin/usuarios">) {
   const admin = await requireUser(["ADMIN"]);
   const params = await props.searchParams;
@@ -51,12 +55,12 @@ export default async function UsersPage(props: PageProps<"/admin/usuarios">) {
   return (
     <>
       <PageHeader
-        eyebrow="ADMINISTRACIÓN"
+        eyebrow="Administración"
         title="Usuarios"
         description="Gestiona las cuentas de acceso del personal y de los estudiantes."
         actions={
           <Link className="btn btn-primary" href="/admin/usuarios/nuevo">
-            + Nuevo usuario
+            <UserPlus aria-hidden="true" /> Nuevo usuario
           </Link>
         }
       />
@@ -64,14 +68,11 @@ export default async function UsersPage(props: PageProps<"/admin/usuarios">) {
       {ok && flashMessages[ok] && <Alert tone="success">{flashMessages[ok]}</Alert>}
       {error && errorMessages[error] && <Alert tone="error">{errorMessages[error]}</Alert>}
 
-      <section className="panel-card">
+      <section className="panel-card" style={{ marginTop: ok || error ? 20 : 0 }}>
         <form className="toolbar" role="search">
           <label className="toolbar-search">
             <span className="sr-only">Buscar usuario</span>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="11" cy="11" r="6" />
-              <path d="m20 20-4.5-4.5" />
-            </svg>
+            <Search aria-hidden="true" />
             <input type="search" name="q" defaultValue={search} placeholder="Buscar por nombre o correo" />
           </label>
           <label>
@@ -104,7 +105,7 @@ export default async function UsersPage(props: PageProps<"/admin/usuarios">) {
         </form>
 
         {rows.length === 0 ? (
-          <EmptyState icon="0" title="Sin resultados">
+          <EmptyState icon={Users} title="Sin resultados">
             Ningún usuario coincide con los filtros aplicados.
           </EmptyState>
         ) : (
@@ -145,7 +146,7 @@ export default async function UsersPage(props: PageProps<"/admin/usuarios">) {
                           {user.is_active ? "Activo" : "Inactivo"}
                         </Badge>
                       </td>
-                      <td data-label="Creado">
+                      <td data-label="Creado" className="tabular">
                         {new Intl.DateTimeFormat("es-EC", { dateStyle: "medium" }).format(user.created_at)}
                       </td>
                       <td className="cell-actions">

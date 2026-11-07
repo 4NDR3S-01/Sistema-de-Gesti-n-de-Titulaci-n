@@ -1,10 +1,12 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { updateStudentAction } from "@/app/(app)/estudiantes/actions";
 import { StudentForm } from "@/components/student-form";
-import { PageHeader } from "@/components/ui";
+import { BackLink, PageHeader } from "@/components/ui";
 import { listCareers } from "@/lib/data/catalogs";
 import { getStudentById } from "@/lib/data/students";
+
+export const metadata: Metadata = { title: "Editar estudiante" };
 
 export default async function EditStudentPage(
   props: PageProps<"/estudiantes/[id]/editar">,
@@ -26,11 +28,9 @@ export default async function EditStudentPage(
 
   return (
     <>
-      <Link className="back-link" href="/estudiantes">
-        ← Volver a estudiantes
-      </Link>
+      <BackLink href="/estudiantes">Volver a estudiantes</BackLink>
       <PageHeader
-        eyebrow="GESTIÓN ACADÉMICA"
+        eyebrow="Gestión académica"
         title={`${student.name} ${student.lastname}`}
         description="Actualiza los datos personales y académicos del estudiante."
       />

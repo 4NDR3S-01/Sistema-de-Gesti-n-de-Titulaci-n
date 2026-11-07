@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { Search, UserPlus, UsersRound } from "lucide-react";
 import { listCareers, listFaculties } from "@/lib/data/catalogs";
+import { registrationStatusByStudent } from "@/lib/data/pat";
 import { listStudents } from "@/lib/data/students";
+import { patStatusLabel, patStatusTone } from "@/lib/labels";
 import { PAGE_SIZE } from "@/lib/data/users";
 import {
   Alert,
@@ -17,6 +21,8 @@ const flashMessages: Record<string, string> = {
   actualizado: "Los datos del estudiante se actualizaron correctamente.",
 };
 
+export const metadata: Metadata = { title: "Estudiantes" };
+
 export default async function StudentsPage(props: PageProps<"/estudiantes">) {
   const params = await props.searchParams;
   const search = searchParam(params.q);
@@ -30,6 +36,7 @@ export default async function StudentsPage(props: PageProps<"/estudiantes">) {
     listFaculties(),
     listCareers(),
   ]);
+  const titulacion = await registrationStatusByStudent(rows.map((row) => row.id));
   const visibleCareers = facultyId
     ? careers.filter((career) => career.faculty_id === facultyId)
     : careers;
@@ -38,26 +45,23 @@ export default async function StudentsPage(props: PageProps<"/estudiantes">) {
   return (
     <>
       <PageHeader
-        eyebrow="GESTIÓN ACADÉMICA"
+        eyebrow="Gestión académica"
         title="Estudiantes"
         description="Consulta, busca y actualiza la información de los estudiantes registrados."
         actions={
           <Link className="btn btn-primary" href="/estudiantes/nuevo">
-            + Nuevo estudiante
+            <UserPlus aria-hidden="true" /> Nuevo estudiante
           </Link>
         }
       />
 
       {ok && flashMessages[ok] && <Alert tone="success">{flashMessages[ok]}</Alert>}
 
-      <section className="panel-card">
+      <section className="panel-card" style={{ marginTop: ok ? 20 : 0 }}>
         <form className="toolbar" role="search">
           <label className="toolbar-search">
             <span className="sr-only">Buscar estudiante</span>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="11" cy="11" r="6" />
-              <path d="m20 20-4.5-4.5" />
-            </svg>
+            <Search aria-hidden="true" />
             <input
               type="search"
               name="q"
@@ -99,7 +103,7 @@ export default async function StudentsPage(props: PageProps<"/estudiantes">) {
 
         {rows.length === 0 ? (
           <EmptyState
-            icon="0"
+            icon={UsersRound}
             title={hasFilters ? "Sin resultados" : "Aún no hay estudiantes"}
           >
             {hasFilters
@@ -119,6 +123,7 @@ export default async function StudentsPage(props: PageProps<"/estudiantes">) {
                     <th scope="col">Cédula</th>
                     <th scope="col">Carrera</th>
                     <th scope="col">Semestre</th>
+                    <th scope="col">Titulación</th>
                     <th scope="col">Cuenta</th>
                     <th scope="col">
                       <span className="sr-only">Acciones</span>
@@ -134,7 +139,7 @@ export default async function StudentsPage(props: PageProps<"/estudiantes">) {
                         </strong>
                         <small>{student.email}</small>
                       </td>
-                      <td data-label="Cédula">{student.cedula ?? "—"}</td>
+                      <td data-label="Cédula" className="tabular">{student.cedula ?? "—"}</td>
                       <td data-label="Carrera">
                         {student.career}
                         <small>{student.faculty}</small>
@@ -142,8 +147,17 @@ export default async function StudentsPage(props: PageProps<"/estudiantes">) {
                       <td data-label="Semestre">
                         {student.semester ? `${student.semester}.º` : "—"}
                       </td>
+                      <td data-label="Titulación">
+                        {titulacion.get(student.id) ? (
+                          <Badge tone={patStatusTone(titulacion.get(student.id)!.status)}>
+                            {patStatusLabel(titulacion.get(student.id)!.status)}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted">Sin registro</span>
+                        )}
+                      </td>
                       <td data-label="Cuenta">
-                        <Badge tone={student.is_active ? "success" : "neutral"}>
+                        <Badge tone={student.is_active ? "success" : "danger"}>
                           {student.is_active ? "Activa" : "Inactiva"}
                         </Badge>
                       </td>

@@ -1,23 +1,50 @@
+# Sistema de Gestión de Titulación — ULEAM
 
-# Sistema Web para la Automatización y Seguimiento de Trámites de Titulación
+Sistema web para automatizar y dar seguimiento a los trámites de titulación de la
+Universidad Laica Eloy Alfaro de Manabí: registro del tema PAT 2 (formato
+PAT-04-F-002), revisión por secretaría, asignación de tribunal y convocatoria a la defensa.
 
-Sistema diseñado para gestionar, automatizar y dar seguimiento a los procesos de titulación de los estudiantes universitarios.
+## Tecnología
 
----
+- Next.js 16 (App Router, Server Actions) + React 19
+- Auth.js (correo/contraseña y Microsoft Entra ID)
+- PostgreSQL (`database/`)
 
-## 🗄️ Base de Datos (PostgreSQL)
+## Puesta en marcha
 
-El sistema incluye una estructura relacional completa para PostgreSQL ubicada en `database/`:
-- **Esquema relacional (`schema.sql`)**: Tablas para usuarios, roles, estudiantes, asesores, proyectos de tesis, trámites, etapas y documentos.
-- **Datos iniciales (`seed.sql`)**: Roles y usuario administrador por defecto.
-- **Conexión (`connection.js`)**: Módulo en Node.js para la conexión con `pg`.
-- **Docker Compose (`docker-compose.yml`)**: Configuración rápida para levantar PostgreSQL con carga automática de esquemas.
-
-### Levantamiento rápido con Docker:
 ```bash
-docker compose up -d
+npm install
+cp .env.example .env.local      # completar AUTH_SECRET y DB_*
+npm run db:setup                # crea la base, carga el esquema y aplica migraciones
+npm run db:password -- admin@uleam.edu.ec
+npm run dev
 ```
-=======
-Sistema Web para la Automatización y Seguimiento de Trámites de Titulación para la uleam
 
-## Nuevos cambios
+O levantar solo PostgreSQL con Docker: `docker compose up -d`.
+
+Detalles de autenticación, perfiles y rutas en `AUTH_SETUP.md`.
+
+## Flujo de titulación
+
+1. **Estudiante** completa sus datos (`/perfil`) y crea su registro PAT 2 (`/registro-pat-2`) como
+   borrador: propuesta (modalidad, tema, problemática) y sus datos informativos.
+2. **Trabajo en pareja:** quien crea el registro busca a su compañero/a (misma carrera, sin otro
+   registro activo) y lo invita. El invitado acepta o rechaza desde su panel. Ambos comparten el
+   **mismo registro**: cada uno completa sus datos y firma.
+3. **Firmas**, a elección:
+   - Firma digital de cada integrante: dibujada en pantalla o con foto de la firma en papel
+     (se procesa en el navegador: quita el fondo, recorta y la incrusta en el PDF).
+   - Firma a mano: se descarga el formato, se firma, se escanea y se sube el PDF (máx. 5 MB).
+   Si cambia la propuesta o los datos, las firmas y el escaneado se anulan automáticamente.
+4. Con todos los requisitos cumplidos, el autor lo **envía a revisión**.
+5. **Secretaría** (`/aprobacion-pat-2`) aprueba o devuelve con observaciones. Un registro devuelto
+   vuelve a ser editable; al aprobarse se crea el proyecto de titulación de cada integrante.
+6. **Tribunales** (`/tribunales`): fecha, hora, lugar e integrantes. Ambos estudiantes ven la convocatoria.
+
+El PDF PAT-04-F-002 se genera siempre desde el registro guardado (una página por integrante y
+la página de propuesta con firmas), con número de registro y versión al pie: cualquier integrante
+lo descarga sin conflictos. Todo queda en el historial del registro.
+
+## Recursos gráficos
+
+Logos institucionales en `public/brand/` y fotografías del campus en `public/campus/`.

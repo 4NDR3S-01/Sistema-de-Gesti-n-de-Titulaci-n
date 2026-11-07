@@ -16,11 +16,11 @@ SELECT setval('roles_id_seq', (SELECT MAX(id) FROM roles));
 
 -- 2. Usuarios de Prueba (Contraseña de ejemplo: 'admin123' / 'password123')
 INSERT INTO users (id, name, lastname, email, password_hash, role_id, is_active) VALUES
-(1, 'Administrador', 'Sistema', 'admin@titulacion.edu', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 1, TRUE),
-(2, 'Carlos', 'Coordinador', 'coordinator@titulacion.edu', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 2, TRUE),
-(3, 'Dra. María', 'Gómez', 'advisor@titulacion.edu', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 3, TRUE),
-(4, 'Juan', 'Pérez', 'student@titulacion.edu', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 4, TRUE),
-(5, 'Ana', 'Secretaría', 'secretaria@titulacion.edu', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 5, TRUE)
+(1, 'Administrador', 'Sistema', 'admin@uleam.edu.ec', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 1, TRUE),
+(2, 'Carlos', 'Coordinador', 'coordinacion@uleam.edu.ec', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 2, TRUE),
+(3, 'Dra. María', 'Gómez', 'maria.gomez@uleam.edu.ec', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 3, TRUE),
+(4, 'Juan', 'Pérez', 'juan.perez@live.uleam.edu.ec', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 4, TRUE),
+(5, 'Ana', 'Secretaría', 'secretaria@uleam.edu.ec', '$2b$10$YourHashedPasswordExamplePlaceholderForTestingOnly123456', 5, TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
