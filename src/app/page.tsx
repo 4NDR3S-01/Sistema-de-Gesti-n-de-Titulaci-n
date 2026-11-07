@@ -68,21 +68,30 @@ export default async function LoginPage(props: PageProps<"/">) {
       </section>
 
       <section className="login-panel">
-        <div className="login-card">
-          <Image
-            className="login-card-logo"
-            src="/brand/uleam-logo.png"
-            alt="Uleam, Universidad Laica Eloy Alfaro de Manabí"
-            width={796}
-            height={231}
-          />
-          <h2>Iniciar sesión</h2>
-          <p>Usa tu cuenta institucional de la ULEAM.</p>
-          <LoginForm
-            passwordEnabled={process.env.NEXT_PUBLIC_PASSWORD_AUTH_ENABLED === "true"}
-            microsoftEnabled={microsoftConfigured}
-            initialError={errorCode ? (authErrors[errorCode] ?? "No se pudo iniciar sesión. Inténtalo de nuevo.") : ""}
-          />
+        <div className="login-panel-inner">
+          <div className="login-card">
+            <Image
+              className="login-card-logo"
+              src="/brand/uleam-logo.png"
+              alt="Uleam, Universidad Laica Eloy Alfaro de Manabí"
+              width={796}
+              height={231}
+              preload
+            />
+            <div className="login-card-heading">
+              <h2>Bienvenido/a</h2>
+              <p>Ingresa al sistema de gestión de titulación.</p>
+            </div>
+            <LoginForm
+              passwordEnabled={process.env.NEXT_PUBLIC_PASSWORD_AUTH_ENABLED === "true"}
+              microsoftEnabled={microsoftConfigured}
+              initialError={errorCode ? (authErrors[errorCode] ?? "No se pudo iniciar sesión. Inténtalo de nuevo.") : ""}
+            />
+          </div>
+          <footer className="login-footer">
+            <span>© {new Date().getFullYear()} Universidad Laica Eloy Alfaro de Manabí</span>
+            <span>Manta, Ecuador</span>
+          </footer>
         </div>
       </section>
     </main>

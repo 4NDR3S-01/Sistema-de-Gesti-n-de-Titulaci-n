@@ -530,7 +530,7 @@ a {
   position: relative;
 }
 
-.input-affix input {
+.input-affix input:not([type="checkbox"]):not([type="radio"]) {
   padding-right: 46px;
 }
 
@@ -1364,7 +1364,7 @@ details.disclosure > .disclosure-body {
   pointer-events: none;
 }
 
-.toolbar-search input {
+.toolbar-search input:not([type="checkbox"]):not([type="radio"]) {
   padding-left: 38px;
 }
 
@@ -3068,7 +3068,7 @@ details.disclosure > .disclosure-body {
   }
 }
 
-.picker-input input {
+.picker-input input:not([type="checkbox"]):not([type="radio"]) {
   padding-left: 38px;
   padding-right: 38px;
 }
@@ -3510,5 +3510,293 @@ details.disclosure > .disclosure-body {
   .user-trigger-chevron,
   .header-divider {
     display: none;
+  }
+}
+
+/* ==========================================================
+   Inicio de sesión: panel del formulario
+   ========================================================== */
+
+.login-panel {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 100% 0%, rgb(0 87 138 / 0.08), transparent 45%),
+    radial-gradient(circle at 0% 100%, rgb(201 138 27 / 0.07), transparent 40%),
+    var(--canvas);
+}
+
+/* Sello institucional como marca de agua. */
+.login-panel::before {
+  content: "";
+  position: absolute;
+  right: -120px;
+  bottom: -120px;
+  width: 520px;
+  height: 520px;
+  background: url("/brand/uleam-seal-watermark.png") center / contain no-repeat;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.login-panel-inner {
+  position: relative;
+  display: grid;
+  gap: 22px;
+  justify-items: center;
+  width: 100%;
+  max-width: 440px;
+}
+
+.login-card {
+  position: relative;
+  width: 100%;
+  max-width: none;
+  padding: 34px 34px 26px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow:
+    0 1px 2px rgb(20 33 46 / 0.04),
+    0 24px 48px -24px rgb(6 49 79 / 0.25);
+}
+
+.login-card::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 34px;
+  right: 34px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, var(--uleam), var(--ochre));
+}
+
+/* En escritorio el logo ya está sobre la foto: en la tarjeta solo aparece
+   cuando la foto se oculta (pantallas angostas). */
+.login-card .login-card-logo {
+  display: none;
+  width: 168px;
+  height: auto;
+  margin: 0 0 24px;
+}
+
+@media (max-width: 900px) {
+  .login-card .login-card-logo {
+    display: block;
+  }
+}
+
+.login-card-heading {
+  padding-bottom: 22px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.login-card-heading h2 {
+  font-size: 26px;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+}
+
+.login-card-heading p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.login-body {
+  display: grid;
+  gap: 20px;
+}
+
+.login-body .login-form {
+  gap: 18px;
+  margin-top: 0;
+}
+
+.audience-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--sunken);
+}
+
+.audience-switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.audience-switch button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.audience-switch button:hover {
+  color: var(--ink);
+}
+
+.audience-switch button[aria-selected="true"] {
+  background: var(--surface);
+  color: var(--uleam);
+  box-shadow: 0 1px 3px rgb(20 33 46 / 0.12);
+}
+
+.input-icon {
+  position: relative;
+}
+
+.input-icon > svg {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  width: 18px;
+  height: 18px;
+  color: #94a3b8;
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: color 0.15s;
+}
+
+/* Misma especificidad que la regla global de campos, declarada después: gana. */
+.input-icon > input:not([type="checkbox"]):not([type="radio"]) {
+  min-height: 48px;
+  padding-left: 42px;
+  font-size: 15px;
+}
+
+.input-icon.input-affix > input:not([type="checkbox"]):not([type="radio"]) {
+  padding-right: 48px;
+}
+
+.input-icon:focus-within > svg {
+  color: var(--uleam);
+}
+
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.field-label-row label {
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--uleam);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+.link-button svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.15s;
+}
+
+.link-button svg.is-open {
+  transform: rotate(180deg);
+}
+
+.forgot-help {
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--uleam-50);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.caps-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--warning);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.caps-warning svg {
+  width: 15px;
+  height: 15px;
+}
+
+.login-submit {
+  min-height: 50px;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.login-submit svg {
+  transition: transform 0.15s;
+}
+
+.login-submit:hover svg {
+  transform: translateX(3px);
+}
+
+.ms-button {
+  min-height: 50px;
+}
+
+.login-body .login-divider {
+  margin: 0;
+}
+
+.login-body .login-note {
+  margin-top: 2px;
+  padding-top: 18px;
+}
+
+.login-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 520px) {
+  .login-panel {
+    padding: 24px 14px;
+  }
+
+  .login-card {
+    padding: 28px 22px 22px;
+  }
+
+  .login-card::before {
+    left: 22px;
+    right: 22px;
   }
 }
