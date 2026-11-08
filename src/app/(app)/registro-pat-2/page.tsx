@@ -39,7 +39,7 @@ import { getPatDetailForStudent } from "@/lib/data/pat";
 import { getStudentByUserId } from "@/lib/data/students";
 import { getTribunalByStudent } from "@/lib/data/tribunals";
 import { patStatusLabel, patStatusTone, shortDateTime } from "@/lib/labels";
-import { patDocumentData, personalFormValues, proposalFormValues } from "@/lib/pat-document-data";
+import { personalFormValues, proposalFormValues } from "@/lib/pat-document-data";
 import { canSubmit, isEditable, personalDataComplete } from "@/lib/pat-rules";
 
 export const metadata: Metadata = { title: "Registro de tema PAT 2" };
@@ -62,14 +62,17 @@ const flashMessages: Record<string, string> = {
 };
 
 const errorMessages: Record<string, string> = {
-  permiso: "Esa acción solo la puede hacer quien creó el registro.",
-  "no-editable": "El registro ya está en revisión o aprobado y no se puede modificar.",
-  "not-editable": "El registro ya está en revisión o aprobado y no se puede modificar.",
-  "not-group": "Para invitar a alguien, cambia la propuesta a «En pareja».",
-  "invalid-teammate": "Ese estudiante no está disponible: debe estar activo y ser de tu carrera.",
-  busy: "Ese estudiante ya forma parte de otro registro PAT 2.",
-  "sin-invitacion": "La invitación ya no está disponible.",
-  incompleto: "Aún faltan requisitos para enviar el registro. Revisa la lista.",
+  only_leader: "Esa acción solo la puede hacer quien creó el registro.",
+  only_member: "Quien creó el registro no puede salir; puede eliminar el borrador.",
+  not_editable: "El registro ya está en revisión o aprobado y no se puede modificar.",
+  not_draft: "Solo se puede eliminar un registro en borrador.",
+  not_group: "Para invitar a alguien, cambia la propuesta a «En pareja».",
+  invalid_teammate: "Ese estudiante no está disponible: debe estar activo y ser de tu carrera.",
+  teammate_busy: "Ese estudiante ya forma parte de otro registro PAT 2.",
+  no_invitation: "La invitación ya no está disponible.",
+  incomplete: "Aún faltan requisitos para enviar el registro. Revisa la lista.",
+  not_member: "No eres integrante de este registro.",
+  no_registration: "No tienes un registro PAT 2.",
 };
 
 function Step({
@@ -172,8 +175,6 @@ export default async function PatRegistrationPage(props: PageProps<"/registro-pa
   const isLeader = membership.role === "LEADER";
   const editable = isEditable(r.status);
   const anySigned = members.some((member) => member.signature) || Boolean(scan);
-  const docData = patDocumentData(detail);
-  const fileBase = `PAT-04-F-002_registro-${r.id}`;
 
   /* ------------------------------------------------ Invitación */
   if (membership.status === "INVITED") {
@@ -271,7 +272,7 @@ export default async function PatRegistrationPage(props: PageProps<"/registro-pa
             {approved && r.observations && <p className="observations is-positive">{r.observations}</p>}
           </div>
           <div className="status-banner-actions">
-            <PatPdfButton data={docData} fileName={`${fileBase}.pdf`} />
+            <PatPdfButton registrationId={r.id} />
             {scan && (
               <a className="btn btn-ghost" href={`/api/pat/${r.id}/escaneado`} target="_blank" rel="noreferrer">
                 <FileText aria-hidden="true" /> Ver escaneado
@@ -514,8 +515,8 @@ export default async function PatRegistrationPage(props: PageProps<"/registro-pa
                   <li>Escanéalo en un solo PDF y súbelo aquí.</li>
                 </ol>
                 <PatPdfButton
-                  data={patDocumentData(detail, { withSignatures: false })}
-                  fileName={`${fileBase}_para-firmar.pdf`}
+                  registrationId={r.id}
+                  unsigned
                   label="Descargar para firmar a mano"
                   className="btn btn-secondary btn-sm"
                 />
@@ -554,8 +555,7 @@ export default async function PatRegistrationPage(props: PageProps<"/registro-pa
                 <p className="field-hint">{leader?.name} enviará el registro cuando todo esté listo.</p>
               )}
               <PatPdfButton
-                data={docData}
-                fileName={`${fileBase}.pdf`}
+                registrationId={r.id}
                 label="Vista previa del PDF"
                 className="btn btn-ghost btn-block"
               />

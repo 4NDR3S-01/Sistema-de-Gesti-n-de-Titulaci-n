@@ -17,11 +17,9 @@ export type CurrentUser = {
  * Usuario de la sesión, leído de la base en cada solicitud para que una
  * cuenta desactivada o un cambio de rol se apliquen de inmediato.
  */
-export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
-  const session = await auth();
-  const id = Number(session?.user?.id);
+/** Usuario activo por id, leído de la base (sesión web o token de la app). */
+export async function loadActiveUser(id: number): Promise<CurrentUser | null> {
   if (!Number.isInteger(id) || id <= 0) return null;
-
   const [row] = await query<{
     id: number;
     name: string;
@@ -37,6 +35,11 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   );
   if (!row || !isAppRole(row.role)) return null;
   return { ...row, role: row.role };
+}
+
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+  const session = await auth();
+  return loadActiveUser(Number(session?.user?.id));
 });
 
 /** Exige sesión (y opcionalmente un rol); si no, redirige. Úsalo también en cada Server Action. */

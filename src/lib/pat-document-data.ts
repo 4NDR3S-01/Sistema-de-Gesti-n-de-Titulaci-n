@@ -1,4 +1,4 @@
-import type { PatDocumentData } from "@/components/pat-document";
+import type { PatDocumentData } from "@/lib/pat-document-types";
 import type { PatDetail, PatMember } from "@/lib/data/pat";
 
 const sexLabel: Record<string, string> = { MASCULINO: "Masculino", FEMENINO: "Femenino" };

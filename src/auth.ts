@@ -1,19 +1,11 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
-import bcrypt from "bcryptjs";
 import { isAppRole } from "@/lib/auth-roles";
-import { findUserByCedula, findUserByEmail, syncUserNames } from "@/lib/data/users";
+import { verifyCredentials } from "@/lib/auth-credentials";
+import { findUserByEmail, syncUserNames } from "@/lib/data/users";
 import { syncStudentFromDirectory } from "@/lib/directory";
-import { emailDomain, isInstitutionalEmail, isStudentEmail, parseLoginIdentifier } from "@/lib/institution";
-import { clearSuccessfulLogin, loginIsRateLimited, recordFailedLogin } from "@/lib/login-rate-limit";
-
-/** En desarrollo, explica en la consola del servidor por qué se rechazó un login. */
-function logRejectedLogin(email: string, reason: string) {
-  if (process.env.NODE_ENV === "development") {
-    console.warn(`[login] ${email}: ${reason}`);
-  }
-}
+import { isInstitutionalEmail } from "@/lib/institution";
 
 /** Tenant de Microsoft 365 de la ULEAM (live.uleam.edu.ec y uleam.edu.ec). */
 const ULEAM_ISSUER = "https://login.microsoftonline.com/31a17900-7589-4cfc-b11a-f4e83c27b8ed/v2.0";
@@ -32,53 +24,9 @@ const providers = [
       audience: { label: "Tipo de cuenta", type: "text" },
     },
     async authorize(credentials, request) {
-      if (process.env.PASSWORD_AUTH_ENABLED !== "true") {
-        logRejectedLogin("-", "PASSWORD_AUTH_ENABLED no está en true");
-        return null;
-      }
-
-      const rawIdentifier = typeof credentials.identifier === "string" ? credentials.identifier : "";
-      const password = typeof credentials.password === "string" ? credentials.password : "";
-      const audience = credentials.audience;
-      const identifier = parseLoginIdentifier(rawIdentifier);
-      // Se usa una clave estable para contabilizar fallos sin almacenar el identificador en claro.
-      const throttleId = rawIdentifier.trim().toLowerCase().slice(0, 256);
-      if (loginIsRateLimited(throttleId, request)) return null;
-
-      const reject = () => {
-        recordFailedLogin(throttleId, request);
-        return null;
-      };
-
-      if (!identifier || !password || (audience !== "student" && audience !== "staff")) {
-        return reject();
-      }
-      const loginValue = identifier.value;
-
-      if (identifier.kind === "email" && !isInstitutionalEmail(loginValue)) {
-        return reject();
-      }
-      // La selección estudiante/personal se verifica también en el servidor.
-      if (audience === "student") {
-        if (identifier.kind === "email" && !isStudentEmail(loginValue)) return reject();
-      } else if (identifier.kind !== "email" || emailDomain(loginValue) !== "uleam.edu.ec") {
-        return reject();
-      }
-
-      const user = identifier.kind === "cedula"
-        ? await findUserByCedula(loginValue)
-        : await findUserByEmail(loginValue);
-      if (!user || !user.is_active || !isAppRole(user.role)) return reject();
-      if (audience === "student" && user.role !== "STUDENT") return reject();
-      if (audience === "staff" && user.role !== "SECRETARY" && user.role !== "ADMIN") return reject();
-      if (!/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(user.password_hash)) {
-        return reject();
-      }
-
-      const passwordMatches = await bcrypt.compare(password, user.password_hash);
-      if (!passwordMatches) return reject();
-
-      clearSuccessfulLogin(throttleId);
+      // Reglas compartidas con la app móvil: límite de intentos y tipo de cuenta según el rol.
+      const user = await verifyCredentials(credentials.identifier, credentials.password, credentials.audience, request);
+      if (!user) return null;
       return {
         id: String(user.id),
         email: user.email,

@@ -2,16 +2,28 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Info, ShieldCheck, X } from "lucide-react";
+import { ArrowUpRight, Info, ShieldCheck, X } from "lucide-react";
 
 type Content = "about" | "terms";
 
+/** Equipo de desarrollo: cada tarjeta lleva a su perfil de GitHub (avatares guardados en public/team). */
 const creators = [
-  "William Cabrera Palacios",
-  "Jennifer Tigua Anchundia",
-  "Luis Mendoza Zambrano",
-  "Victor Zambrano Martínez",
+  { name: "William Cabrera Palacios", github: "4NDR3S-01" },
+  { name: "Jennifer Tigua Anchundia", github: "JSTA640" },
+  { name: "Luis Mendoza Zambrano", github: "Luis-M25" },
+  { name: "Victor Zambrano Martínez", github: "VictorZ1111" },
 ];
+
+const REPOSITORY_URL = "https://github.com/4NDR3S-01/Sistema-de-Gesti-n-de-Titulaci-n";
+
+/** Marca oficial de GitHub (lucide ya no incluye logotipos de marcas). */
+function GitHubMark() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+    </svg>
+  );
+}
 
 export function LoginFooter() {
   const [opened, setOpened] = useState<Content | null>(null);
@@ -31,35 +43,66 @@ export function LoginFooter() {
     <>
       <footer className="login-bottom-bar" aria-label="Información del sistema">
         <div className="login-bottom-inner">
-          <div className="login-bottom-brand">
-            <Image
-              src="/brand/uleam-logo-white.png"
-              alt="Universidad Laica Eloy Alfaro de Manabí"
-              width={796}
-              height={231}
-              className="login-bottom-logo"
-            />
-          </div>
-
-          <div className="login-bottom-separator" aria-hidden="true" />
-
-          <div className="login-bottom-creators">
-            <strong>Creadores</strong>
-            <div className="login-bottom-names">
-              {creators.map((name) => <span key={name}>{name}</span>)}
+          <div className="login-bottom-top">
+            <div className="login-bottom-identity">
+              <span className="login-bottom-mark" aria-hidden="true">
+                <Image src="/brand/uleam-seal-white.png" alt="" width={231} height={231} />
+              </span>
+              <div>
+                <strong>Sistema de Gestión de Titulación</strong>
+                <span>Universidad Laica Eloy Alfaro de Manabí · Manta, Ecuador</span>
+              </div>
             </div>
+            <nav className="login-bottom-links" aria-label="Información adicional">
+              <button type="button" onClick={() => setOpened("about")}>
+                <Info aria-hidden="true" /> Acerca de
+              </button>
+              <button type="button" onClick={() => setOpened("terms")}>
+                <ShieldCheck aria-hidden="true" /> Términos y condiciones
+              </button>
+            </nav>
           </div>
 
-          <div className="login-bottom-separator login-bottom-separator-last" aria-hidden="true" />
+          <section className="login-bottom-team" aria-labelledby="login-team-title">
+            <h2 id="login-team-title">Desarrollado por</h2>
+            <ul>
+              {creators.map((person) => (
+                <li key={person.github}>
+                  <a
+                    className="login-dev"
+                    href={`https://github.com/${person.github}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${person.name}, perfil de GitHub @${person.github} (se abre en una pestaña nueva)`}
+                  >
+                    <Image
+                      className="login-dev-avatar"
+                      src={`/team/${person.github.toLowerCase()}.jpg`}
+                      alt=""
+                      width={44}
+                      height={44}
+                    />
+                    <span className="login-dev-text">
+                      <strong>{person.name}</strong>
+                      <span>
+                        <GitHubMark />@{person.github}
+                      </span>
+                    </span>
+                    <ArrowUpRight className="login-dev-go" aria-hidden="true" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
 
-          <nav className="login-bottom-links" aria-label="Información adicional">
-            <button type="button" onClick={() => setOpened("about")}>
-              <Info aria-hidden="true" /> Acerca de
-            </button>
-            <button type="button" onClick={() => setOpened("terms")}>
-              <ShieldCheck aria-hidden="true" /> Términos y condiciones
-            </button>
-          </nav>
+        <div className="login-bottom-legal">
+          <div>
+            <span>© {new Date().getFullYear()} ULEAM. Uso exclusivo para la comunidad universitaria.</span>
+            <a href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer">
+              <GitHubMark /> Código fuente del proyecto
+            </a>
+          </div>
         </div>
       </footer>
 

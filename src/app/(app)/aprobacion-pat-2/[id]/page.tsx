@@ -9,7 +9,6 @@ import { ReviewForm } from "@/components/review-form";
 import { Alert, BackLink, Badge, PageHeader } from "@/components/ui";
 import { getPatDetail } from "@/lib/data/pat";
 import { patStatusLabel, patStatusTone, shortDateTime } from "@/lib/labels";
-import { patDocumentData } from "@/lib/pat-document-data";
 
 export const metadata: Metadata = { title: "Revisión de registro PAT 2" };
 
@@ -109,8 +108,7 @@ export default async function PatReviewPage(props: PageProps<"/aprobacion-pat-2/
             <div className="panel-card-body stack" style={{ gap: 12 }}>
               <p className="text-muted" style={{ fontSize: 14 }}>{signatureMode}.</p>
               <PatPdfButton
-                data={patDocumentData(detail)}
-                fileName={`PAT-04-F-002_registro-${r.id}.pdf`}
+                registrationId={r.id}
                 className="btn btn-secondary btn-block"
               />
               {scan && (
