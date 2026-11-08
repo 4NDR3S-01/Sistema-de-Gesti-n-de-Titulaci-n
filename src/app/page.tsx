@@ -3,6 +3,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { microsoftConfigured } from "@/auth";
 import { LoginForm } from "@/components/login-form";
+import { LoginFooter } from "@/components/login-footer";
 import { getCurrentUser } from "@/lib/current-user";
 
 export const metadata: Metadata = {
@@ -31,7 +32,8 @@ export default async function LoginPage(props: PageProps<"/">) {
   if (user) redirect("/panel");
 
   return (
-    <main className="login">
+    <div className="login-page">
+      <main className="login">
       <section className="login-visual duotone" aria-label="Universidad Laica Eloy Alfaro de Manabí">
         <Image
           className="duotone-bg"
@@ -88,12 +90,10 @@ export default async function LoginPage(props: PageProps<"/">) {
               initialError={errorCode ? (authErrors[errorCode] ?? "No se pudo iniciar sesión. Inténtalo de nuevo.") : ""}
             />
           </div>
-          <footer className="login-footer">
-            <span>© {new Date().getFullYear()} Universidad Laica Eloy Alfaro de Manabí</span>
-            <span>Manta, Ecuador</span>
-          </footer>
         </div>
       </section>
-    </main>
+      </main>
+      <LoginFooter />
+    </div>
   );
 }
