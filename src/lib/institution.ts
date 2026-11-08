@@ -30,15 +30,14 @@ export type LoginIdentifier =
 /**
  * Interpreta lo que la persona escribe en el inicio de sesión:
  * - 10 dígitos: cédula.
- * - Usuario sin "@": se completa con el dominio de estudiantes.
- * - Correo completo: se usa tal cual.
+ * - Correo institucional completo: se usa tal cual.
+ * - No se permiten usuarios abreviados sin dominio.
  * Devuelve null si no es un identificador válido.
  */
 export function parseLoginIdentifier(raw: string): LoginIdentifier | null {
   const value = raw.trim().toLowerCase().replace(/\s+/g, "");
   if (!value) return null;
   if (/^\d{10}$/.test(value)) return { kind: "cedula", value };
-  if (/^[a-z0-9._-]+$/.test(value)) return { kind: "email", value: `${value}@${STUDENT_EMAIL_DOMAIN}` };
   if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) return { kind: "email", value };
   return null;
 }

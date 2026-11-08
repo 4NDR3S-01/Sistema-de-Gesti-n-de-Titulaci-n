@@ -26,7 +26,7 @@ const copy = {
   student: {
     label: "Correo institucional o cédula",
     placeholder: `usuario@${STUDENT_EMAIL_DOMAIN}`,
-    hint: `Puedes escribir solo tu usuario (sin @${STUDENT_EMAIL_DOMAIN}) o tu cédula de 10 dígitos.`,
+    hint: `Ingresa tu correo institucional completo (@${STUDENT_EMAIL_DOMAIN}) o tu cédula de 10 dígitos.`,
     icon: IdCard,
     forgot: "Pide a la secretaría académica de tu facultad que restablezca tu contraseña. Lleva tu cédula.",
   },
@@ -55,6 +55,7 @@ export function LoginForm({
   const [showForgot, setShowForgot] = useState(false);
   const [loading, setLoading] = useState<"password" | "microsoft" | null>(null);
   const [error, setError] = useState(initialError);
+  const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
   const text = copy[audience];
   const IdentifierIcon = text.icon;
 
@@ -71,6 +72,8 @@ export function LoginForm({
   function chooseAudience(next: Audience) {
     setAudience(next);
     setError("");
+    setFieldErrors({});
+    setShowForgot(false);
     try {
       localStorage.setItem(AUDIENCE_KEY, next);
     } catch {
@@ -87,26 +90,62 @@ export function LoginForm({
     if (loading) return;
     setError("");
     const data = new FormData(event.currentTarget);
-    const identifier = String(data.get("identifier") ?? "");
-    if (!parseLoginIdentifier(identifier)) {
-      setError(
-        audience === "student"
-          ? "Escribe tu correo institucional, tu usuario o tu cédula de 10 dígitos."
-          : "Escribe tu correo institucional @uleam.edu.ec.",
-      );
-      return;
+    const identifier = String(data.get("identifier") ?? "").trim();
+    const password = String(data.get("password") ?? "");
+    const parsed = parseLoginIdentifier(identifier);
+    const issues: { identifier?: string; password?: string } = {};
+
+    if (!identifier) {
+      issues.identifier = "Ingresa tu correo institucional completo o cédula.";
+    } else if (/^\d+$/.test(identifier) && identifier.length !== 10) {
+      issues.identifier = "La cédula debe tener exactamente 10 dígitos.";
+    } else if (!parsed) {
+      issues.identifier = audience === "student"
+        ? `Ingresa tu correo completo @${STUDENT_EMAIL_DOMAIN} o una cédula de 10 dígitos.`
+        : "Ingresa tu correo institucional completo @uleam.edu.ec.";
+    } else if (audience === "student" && parsed.kind === "email" &&
+      !parsed.value.endsWith(`@${STUDENT_EMAIL_DOMAIN}`)) {
+      issues.identifier = `Utiliza tu cuenta de estudiante @${STUDENT_EMAIL_DOMAIN}.`;
+    } else if (audience === "staff" &&
+      (parsed.kind !== "email" || !identifier.includes("@") || !parsed.value.endsWith("@uleam.edu.ec"))) {
+      issues.identifier = "Para personal, ingresa tu correo @uleam.edu.ec.";
     }
+
+    if (!password) issues.password = "Ingresa tu contraseña.";
+    setFieldErrors(issues);
+    if (Object.keys(issues).length) return;
     setLoading("password");
 
     try {
       const result = await signIn("credentials", {
         identifier,
-        password: String(data.get("password") ?? ""),
+        password,
+        audience,
         redirect: false,
         redirectTo: "/panel",
       });
       if (result?.error || !result?.url) {
-        setError("Los datos no coinciden con una cuenta activa. Revisa tu usuario y tu contraseña.");
+        // NextAuth devuelve un error genérico para credenciales incorrectas y bloqueos.
+        // Se consulta solo el tiempo de espera para informar al usuario sin revelar cuentas.
+        let message = "No se pudo iniciar sesión. Verifica tus credenciales y el tipo de acceso seleccionado.";
+        try {
+          const statusResponse = await fetch("/api/auth/login-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ identifier }),
+            cache: "no-store",
+          });
+          if (statusResponse.ok) {
+            const status: { blocked?: boolean; waitSeconds?: number } = await statusResponse.json();
+            if (status.blocked) {
+              const minutes = Math.max(1, Math.ceil((status.waitSeconds ?? 0) / 60));
+              message = `Acceso temporalmente restringido por demasiados intentos. Vuelve a intentarlo en aproximadamente ${minutes} ${minutes === 1 ? "minuto" : "minutos"}.`;
+            }
+          }
+        } catch {
+          // Si el endpoint de estado no responde, mantener el error genérico.
+        }
+        setError(message);
         setLoading(null);
         return;
       }
@@ -140,11 +179,11 @@ export function LoginForm({
 
   return (
     <div className="login-body">
-      <div className="audience-switch" role="tablist" aria-label="Tipo de cuenta">
-        <button type="button" role="tab" aria-selected={audience === "student"} onClick={() => chooseAudience("student")}>
+      <div className="audience-switch" role="group" aria-label="Tipo de cuenta">
+        <button type="button" aria-pressed={audience === "student"} onClick={() => chooseAudience("student")}>
           <GraduationCap aria-hidden="true" /> Soy estudiante
         </button>
-        <button type="button" role="tab" aria-selected={audience === "staff"} onClick={() => chooseAudience("staff")}>
+        <button type="button" aria-pressed={audience === "staff"} onClick={() => chooseAudience("staff")}>
           <BriefcaseBusiness aria-hidden="true" /> Soy personal
         </button>
       </div>
@@ -175,7 +214,7 @@ export function LoginForm({
 
       {passwordEnabled && (
         <form className="login-form" onSubmit={handlePassword} noValidate>
-          <div className="field">
+          <div className={`field${fieldErrors.identifier ? " has-error" : ""}`}>
             <label htmlFor="identifier">{text.label}</label>
             <div className="input-icon">
               <IdentifierIcon aria-hidden="true" />
@@ -187,7 +226,9 @@ export function LoginForm({
                 autoCapitalize="none"
                 spellCheck={false}
                 placeholder={text.placeholder}
-                aria-describedby="identifier-hint"
+                aria-describedby={fieldErrors.identifier ? "identifier-hint identifier-error" : "identifier-hint"}
+                aria-invalid={Boolean(fieldErrors.identifier)}
+                onChange={() => setFieldErrors((prev) => ({ ...prev, identifier: undefined }))}
                 required
                 disabled={loading !== null}
               />
@@ -195,9 +236,10 @@ export function LoginForm({
             <span className="field-hint" id="identifier-hint">
               {text.hint}
             </span>
+            {fieldErrors.identifier && <span className="field-error" id="identifier-error" role="alert">{fieldErrors.identifier}</span>}
           </div>
 
-          <div className="field">
+          <div className={`field${fieldErrors.password ? " has-error" : ""}`}>
             <div className="field-label-row">
               <label htmlFor="password">Contraseña</label>
               <button
@@ -228,7 +270,9 @@ export function LoginForm({
                 onKeyUp={trackCapsLock}
                 onKeyDown={trackCapsLock}
                 onBlur={() => setCapsLock(false)}
-                aria-describedby={capsLock ? "caps-warning" : undefined}
+                aria-describedby={[capsLock ? "caps-warning" : null, fieldErrors.password ? "password-error" : null].filter(Boolean).join(" ") || undefined}
+                aria-invalid={Boolean(fieldErrors.password)}
+                onChange={() => setFieldErrors((prev) => ({ ...prev, password: undefined }))}
               />
               <button
                 type="button"
@@ -239,6 +283,7 @@ export function LoginForm({
                 {showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
               </button>
             </div>
+            {fieldErrors.password && <span className="field-error" id="password-error" role="alert">{fieldErrors.password}</span>}
             {capsLock && (
               <span className="caps-warning" id="caps-warning" role="status">
                 <TriangleAlert aria-hidden="true" /> Bloq Mayús está activado.
