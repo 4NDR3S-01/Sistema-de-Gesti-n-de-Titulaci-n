@@ -59,6 +59,7 @@ export type PatMember = {
   personal_email: string | null;
   phone: string | null;
   landline: string | null;
+  semester: number | null;
   career: string;
   faculty: string;
 };
@@ -110,7 +111,7 @@ const registrationSelect = `
 const memberSelect = `
   SELECT m.id, m.registration_id, m.student_id, u.id AS user_id, m.role, m.status, m.extra_data,
          m.signature, m.signature_method, m.signed_at,
-         u.name, u.lastname, u.email, s.cedula, s.sex, s.personal_email, s.phone, s.landline,
+         u.name, u.lastname, u.email, s.cedula, s.sex, s.personal_email, s.phone, s.landline, s.semester,
          c.name AS career, f.name AS faculty
   FROM pat_members m
   JOIN students s ON s.id = m.student_id
@@ -341,6 +342,7 @@ async function resetSignatures(client: PoolClient, registrationId: number, actor
 function personalData(data: PatPersonalInput): PatExtraData {
   return {
     level: data.level,
+    curso: data.curso,
     parallel: data.parallel,
     birthDate: data.birthDate,
     nationality: data.nationality,

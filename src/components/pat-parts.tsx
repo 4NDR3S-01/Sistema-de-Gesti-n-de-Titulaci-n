@@ -160,6 +160,7 @@ export function MemberDataSummary({ member }: { member: PatMember }) {
     { label: "Cédula", value: member.cedula },
     { label: "Sexo", value: member.sex ? sexLabel[member.sex] : null },
     { label: "Nivel y paralelo", value: [extra.level, extra.parallel && `paralelo ${extra.parallel}`].filter(Boolean).join(", ") },
+    { label: "Curso", value: extra.curso || (member.semester ? `${member.semester}.º` : null) },
     { label: "Nacimiento", value: extra.birthDate ? `${extra.birthDate}${age !== null ? ` (${age} años)` : ""}` : null },
     { label: "Nacionalidad", value: extra.nationality },
     { label: "Estado civil", value: extra.maritalStatus },

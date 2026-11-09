@@ -11,6 +11,7 @@ export type PatDocumentMember = {
   personalEmail: string;
   phone: string;
   landline: string;
+  semester?: number | null;
   signature?: string | null;
 } & PatExtraData;
 

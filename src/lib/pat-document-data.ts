@@ -38,6 +38,7 @@ export function patDocumentData(detail: PatDetail, { withSignatures = true } = {
         personalEmail: member.personal_email ?? "",
         phone: member.phone ?? "",
         landline: member.landline ?? "",
+        semester: member.semester,
         signature: withSignatures ? member.signature : null,
       })),
   };
@@ -57,7 +58,11 @@ export function proposalFormValues(detail: PatDetail): Record<string, string> {
 }
 
 export function personalFormValues(member: PatMember): Record<string, string> {
-  return Object.fromEntries(
+  const values = Object.fromEntries(
     Object.entries(member.extra_data).filter(([, value]) => typeof value === "string"),
   ) as Record<string, string>;
+  return {
+    ...values,
+    curso: values.curso || (member.semester ? `${member.semester}.º` : ""),
+  };
 }

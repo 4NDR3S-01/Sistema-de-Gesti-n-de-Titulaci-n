@@ -80,7 +80,8 @@ export function ProposalFields({
 
       <View style={{ gap: 8 }}>
         <T variant="label">
-          Articulación con funciones sustantivas <T variant="label" color={colors.danger}>*</T>
+          Articulación del Trabajo de Integración Curricular con funciones sustantivas{" "}
+          <T variant="label" color={colors.danger}>*</T>
         </T>
         {catalog.articulations.map((option) => (
           <Choice key={option.value} selected={articulations.includes(option.value)} onPress={() => toggle(option.value)} title={option.label} />
@@ -115,6 +116,9 @@ export function PersonalFields({ catalog, values, set, errors }: { catalog: Cata
           </Field>
         </View>
       </View>
+      <Field label="Curso" hint="Si lo dejas vacío, se usa tu semestre." error={err(errors, "curso")}>
+        <Input value={values.curso ?? ""} onChangeText={(v) => set("curso", v)} placeholder="Ej. 9.º" maxLength={20} />
+      </Field>
       <Field label="Fecha de nacimiento" required error={err(errors, "birthDate")} hint={age !== null ? `Edad: ${age} años.` : undefined}>
         <DateField value={values.birthDate ?? ""} onChange={(v) => set("birthDate", v)} maximumDate={maxBirth} invalid={Boolean(err(errors, "birthDate"))} />
       </Field>
@@ -124,7 +128,7 @@ export function PersonalFields({ catalog, values, set, errors }: { catalog: Cata
       <Field label="Estado civil" required error={err(errors, "maritalStatus")}>
         <Select title="Estado civil" value={values.maritalStatus ?? ""} options={catalog.maritalStatuses} onChange={(v) => set("maritalStatus", v)} invalid={Boolean(err(errors, "maritalStatus"))} />
       </Field>
-      <Field label="Certificado de votación" hint="Opcional." error={err(errors, "votingCertificate")}>
+      <Field label="Nº de Certificado de Votación" hint="Opcional." error={err(errors, "votingCertificate")}>
         <Input value={values.votingCertificate ?? ""} onChangeText={(v) => set("votingCertificate", v)} maxLength={30} />
       </Field>
       <Field label="Provincia de residencia" required error={err(errors, "province")}>

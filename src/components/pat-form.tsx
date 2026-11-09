@@ -62,6 +62,9 @@ function PersonalFields({ value, errors }: { value: (name: string) => string; er
           <Options values={patLevels} placeholder="Selecciona tu nivel" />
         </select>
       </Field>
+      <Field label="Curso" name="curso" error={errors.curso} hint="Si lo dejas vacío, se usa tu semestre.">
+        <input id="curso" name="curso" defaultValue={value("curso")} maxLength={20} placeholder="Ej. 9.º" />
+      </Field>
       <Field label="Paralelo" name="parallel" error={errors.parallel} required>
         <select id="parallel" name="parallel" defaultValue={value("parallel")} required>
           <Options values={patParallels} placeholder="Selecciona tu paralelo" />
@@ -91,7 +94,12 @@ function PersonalFields({ value, errors }: { value: (name: string) => string; er
           <Options values={maritalStatuses} placeholder="Selecciona una opción" />
         </select>
       </Field>
-      <Field label="Certificado de votación" name="votingCertificate" error={errors.votingCertificate} hint="Opcional.">
+      <Field
+        label="Nº de Certificado de Votación"
+        name="votingCertificate"
+        error={errors.votingCertificate}
+        hint="Opcional."
+      >
         <input id="votingCertificate" name="votingCertificate" defaultValue={value("votingCertificate")} maxLength={30} />
       </Field>
       <Field label="Provincia de residencia" name="province" error={errors.province} required>
@@ -228,7 +236,8 @@ function ProposalFields({
 
       <div className={`field field-full${errors.articulations?.length ? " has-error" : ""}`}>
         <span className="field-label" id="articulations-label">
-          Articulación con funciones sustantivas <span className="field-required" aria-hidden="true">*</span>
+          Articulación del Trabajo de Integración Curricular con funciones sustantivas{" "}
+          <span className="field-required" aria-hidden="true">*</span>
         </span>
         <div className="choice-list" role="group" aria-labelledby="articulations-label">
           {patArticulations.map((option) => (

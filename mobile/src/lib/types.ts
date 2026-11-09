@@ -43,6 +43,7 @@ export type Me = { user: User; student: Student | null; notifications: AppNotifi
 
 export type ExtraData = Partial<{
   level: string;
+  curso: string;
   parallel: string;
   birthDate: string;
   nationality: string;
@@ -98,6 +99,7 @@ export type Member = {
   personal_email: string | null;
   phone: string | null;
   landline: string | null;
+  semester: number | null;
   career: string;
   faculty: string;
 };

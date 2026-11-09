@@ -18,10 +18,29 @@ export const patMechanisms = [
 ] as const;
 
 export const patArticulations = [
-  { value: "investigacion", label: "Se articula con proyectos y programas de investigación" },
-  { value: "vinculacion", label: "Se articula con proyectos y programas de vinculación" },
-  { value: "docencia", label: "Se articula con proyectos de asignaturas (docencia)" },
-  { value: "ninguna", label: "Ninguna" },
+  {
+    value: "investigacion",
+    label: "Se articula con proyectos y programas de investigación",
+    pdfLabel:
+      "Trabajo de Integración Curricular se articula con proyectos y programas de Investigación:",
+  },
+  {
+    value: "vinculacion",
+    label: "Se articula con proyectos y programas de vinculación",
+    pdfLabel:
+      "Trabajo de Integración Curricular se articula con proyectos y programas de Vinculación:",
+  },
+  {
+    value: "docencia",
+    label: "Se articula con proyectos de asignaturas (docencia)",
+    pdfLabel:
+      "Trabajo de Integración Curricular se articula con proyectos de asignaturas (Docencia):",
+  },
+  {
+    value: "ninguna",
+    label: "Ninguna",
+    pdfLabel: "Ninguna:",
+  },
 ] as const;
 
 export type PatArticulation = (typeof patArticulations)[number]["value"];
@@ -64,6 +83,7 @@ export const ecuadorProvinces = [
 /** Datos del formato que no están en la ficha del estudiante. */
 export type PatExtraData = {
   level?: string;
+  curso?: string;
   parallel?: string;
   birthDate?: string;
   nationality?: string;

@@ -43,6 +43,7 @@ function MemberData({ member, signedByScan }: { member: Member; signedByScan: bo
               { label: "Cédula", value: member.cedula },
               { label: "Sexo", value: member.sex === "MASCULINO" ? "Masculino" : member.sex === "FEMENINO" ? "Femenino" : null },
               { label: "Nivel y paralelo", value: [x.level, x.parallel && `paralelo ${x.parallel}`].filter(Boolean).join(", ") },
+              { label: "Curso", value: x.curso || (member.semester ? `${member.semester}.º` : null) },
               { label: "Nacimiento", value: x.birthDate ? `${x.birthDate}${age !== null ? ` (${age} años)` : ""}` : null },
               { label: "Nacionalidad", value: x.nationality },
               { label: "Estado civil", value: x.maritalStatus },

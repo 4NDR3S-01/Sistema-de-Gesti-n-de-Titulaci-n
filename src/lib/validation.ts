@@ -253,6 +253,7 @@ const oneOf = <T extends readonly [string, ...string[]]>(values: T, message: str
 export const patPersonalSchema = z
   .object({
     level: oneOf(patLevels, "Selecciona tu nivel."),
+    curso: optionalText(20, "El curso"),
     parallel: oneOf(patParallels, "Selecciona tu paralelo."),
     birthDate: z.preprocess(
       emptyToUndefined,
