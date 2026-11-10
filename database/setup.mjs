@@ -20,7 +20,10 @@ const config = {
   port: Number(process.env.DB_PORT || 5432),
   user: process.env.DB_USER || "postgres",
   password: process.env.DB_PASSWORD || "postgres",
-  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+  ssl:
+    process.env.DB_SSL === "true"
+      ? { rejectUnauthorized: process.env.DB_SSL_ALLOW_SELF_SIGNED !== "true" }
+      : false,
 };
 const database = process.env.DB_NAME || "sistema_titulacion";
 const sqlDir = join(root, "database");

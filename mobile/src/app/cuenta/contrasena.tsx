@@ -5,7 +5,7 @@ import { FormScreen } from "@/components/form-screen";
 import { FormError } from "@/components/pat-forms";
 import { Banner, Button, Card, Field, Input, T } from "@/components/ui";
 import { useForm } from "@/hooks/use-form";
-import { api } from "@/lib/api";
+import { api, tokenStore } from "@/lib/api";
 
 export default function ChangePassword() {
   const form = useForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -24,14 +24,19 @@ export default function ChangePassword() {
             size="lg"
             loading={form.submitting}
             onPress={async () => {
-              if (await form.submit((values) => api.post("/api/v1/me/password", values))) setDone(true);
+              const saved = await form.submit(async (values) => {
+                // El servidor revoca los tokens anteriores y entrega uno nuevo para este dispositivo.
+                const data = await api.post<{ token?: string }>("/api/v1/me/password", values);
+                if (data?.token) await tokenStore.save(data.token);
+              });
+              if (saved) setDone(true);
             }}
           />
         )
       }
     >
       <T variant="small">Mínimo 8 caracteres, combinando letras y números. No la compartas con nadie.</T>
-      {done ? <Banner tone="success" title="Contraseña actualizada">Úsala la próxima vez que inicies sesión, en la app o en la web.</Banner> : null}
+      {done ? <Banner tone="success" title="Contraseña actualizada">Úsala la próxima vez que inicies sesión, en la app o en la web. Las sesiones de la app en otros dispositivos se cerraron.</Banner> : null}
       <FormError message={done ? undefined : form.message} />
       <Card style={{ gap: 16 }}>
         <Field label="Contraseña actual" required error={e("currentPassword")}>

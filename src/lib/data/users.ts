@@ -146,6 +146,8 @@ export async function updateUser(
   if (data.password) {
     params.push(await bcrypt.hash(data.password, 12));
     sets.push(`password_hash = $${params.length}`);
+    // Una contraseña nueva invalida los tokens de la app emitidos antes.
+    sets.push("token_version = token_version + 1");
   }
   params.push(id);
   await query(`UPDATE users SET ${sets.join(", ")} WHERE id = $${params.length}`, params);
@@ -181,6 +183,9 @@ export async function changeOwnPassword(
   const [row] = await query<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = $1", [id]);
   if (!row || !BCRYPT_HASH.test(row.password_hash)) return "no-password";
   if (!(await bcrypt.compare(current, row.password_hash))) return "wrong-current";
-  await query("UPDATE users SET password_hash = $1 WHERE id = $2", [await bcrypt.hash(next, 12), id]);
+  await query(
+    "UPDATE users SET password_hash = $1, token_version = token_version + 1 WHERE id = $2",
+    [await bcrypt.hash(next, 12), id],
+  );
   return "ok";
 }

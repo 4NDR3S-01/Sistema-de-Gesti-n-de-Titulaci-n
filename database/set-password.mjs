@@ -35,12 +35,15 @@ const client = new pg.Client({
   database: process.env.DB_NAME || "sistema_titulacion",
   user: process.env.DB_USER || "postgres",
   password: process.env.DB_PASSWORD || "postgres",
-  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+  ssl:
+    process.env.DB_SSL === "true"
+      ? { rejectUnauthorized: process.env.DB_SSL_ALLOW_SELF_SIGNED !== "true" }
+      : false,
 });
 
 await client.connect();
 const { rowCount } = await client.query(
-  "UPDATE users SET password_hash = $1 WHERE LOWER(email) = $2",
+  "UPDATE users SET password_hash = $1, token_version = token_version + 1 WHERE LOWER(email) = $2",
   [await bcrypt.hash(password, 12), email],
 );
 await client.end();

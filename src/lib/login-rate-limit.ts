@@ -21,11 +21,23 @@ function hash(value: string): string {
 
 function keys(identifier: string, request: Request): string[] {
   const result = [`id:${hash(identifier.trim().toLowerCase())}`];
-  // Estas cabeceras deben proceder de un proxy inverso de confianza en producción.
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ip = request.headers.get("x-real-ip")?.trim() || forwarded;
+  const ip = clientIp(request);
   if (ip) result.push(`ip:${hash(ip)}`);
   return result;
+}
+
+/**
+ * IP del cliente según el proxy inverso. Sin TRUST_PROXY=true estas cabeceras las
+ * puede inventar cualquiera, así que se ignoran y solo cuenta el límite por identificador.
+ * De X-Forwarded-For se toma la última entrada: la que agregó nuestro proxy
+ * (las anteriores las envía el cliente y pueden ser falsas).
+ */
+export function clientIp(request: Request): string | undefined {
+  if (process.env.TRUST_PROXY !== "true") return undefined;
+  const realIp = request.headers.get("x-real-ip")?.trim();
+  if (realIp) return realIp;
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",").map((part) => part.trim()).filter(Boolean);
+  return forwarded?.at(-1);
 }
 
 function current(key: string, now: number): Attempt | undefined {

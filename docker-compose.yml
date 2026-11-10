@@ -1,5 +1,6 @@
-version: '3.8'
-
+# Solo el servidor PostgreSQL. El esquema, los datos iniciales y las migraciones
+# se cargan con `npm run db:setup` (ver database/README.md), que registra cada
+# migración aplicada y así no se repite ninguna.
 services:
   postgres:
     image: postgres:15-alpine
@@ -7,16 +8,12 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
       POSTGRES_DB: sistema_titulacion
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ./database/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
-      - ./database/migrations/004_pat2_tribunales.sql:/docker-entrypoint-initdb.d/03_pat2_tribunales.sql
-      - ./database/migrations/006_pat2_grupal_firmas.sql:/docker-entrypoint-initdb.d/04_pat2_grupal_firmas.sql
 
 volumes:
   postgres_data:

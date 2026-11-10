@@ -14,7 +14,10 @@ const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   // Configuración opcional de SSL para producción
-  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  ssl:
+    process.env.DB_SSL === 'true'
+      ? { rejectUnauthorized: process.env.DB_SSL_ALLOW_SELF_SIGNED !== 'true' }
+      : false,
 });
 
 pool.on('connect', () => {

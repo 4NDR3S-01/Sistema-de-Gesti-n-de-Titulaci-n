@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { jwtVerify, SignJWT } from "jose";
 import type { AppRole } from "@/lib/auth-roles";
 import { getCurrentUser, loadActiveUser, type CurrentUser } from "@/lib/current-user";
+import { query } from "@/lib/db";
 
 const AUDIENCE = "uleam-titulacion-mobile";
 const TOKEN_DAYS = 30;
@@ -14,9 +15,20 @@ function secret() {
   return new TextEncoder().encode(`${value}:mobile-api`);
 }
 
+async function tokenVersion(userId: number): Promise<number | null> {
+  const [row] = await query<{ token_version: number }>("SELECT token_version FROM users WHERE id = $1", [userId]);
+  return row ? row.token_version : null;
+}
+
+/**
+ * Emite un token para la app. Lleva la versión de credenciales del usuario:
+ * al cambiar la contraseña se incrementa y los tokens anteriores dejan de valer.
+ */
 export async function issueToken(userId: number): Promise<{ token: string; expiresAt: string }> {
+  const version = await tokenVersion(userId);
+  if (version === null) throw new Error(`Usuario ${userId} inexistente al emitir token`);
   const expires = new Date(Date.now() + TOKEN_DAYS * 24 * 60 * 60 * 1000);
-  const token = await new SignJWT({})
+  const token = await new SignJWT({ ver: version })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(String(userId))
     .setAudience(AUDIENCE)
@@ -31,8 +43,12 @@ export async function getRequestUser(request: Request): Promise<CurrentUser | nu
   const header = request.headers.get("authorization");
   if (header?.startsWith("Bearer ")) {
     try {
-      const { payload } = await jwtVerify(header.slice(7), secret(), { audience: AUDIENCE });
-      return await loadActiveUser(Number(payload.sub));
+      const { payload } = await jwtVerify(header.slice(7), secret(), { audience: AUDIENCE, algorithms: ["HS256"] });
+      const userId = Number(payload.sub);
+      const user = await loadActiveUser(userId);
+      // Token revocado (contraseña cambiada después de emitirlo).
+      if (!user || payload.ver !== (await tokenVersion(userId))) return null;
+      return user;
     } catch {
       return null;
     }

@@ -6,11 +6,17 @@ Este directorio contiene la estructura relacional, datos iniciales, vistas de co
 
 ## 📂 Estructura de Archivos
 
-- **`schema.sql`**: Script DDL que define las tablas relacionales (`roles`, `users`, `students`, `advisors`, `projects_theses`, `procedures`, `procedure_stages`, `documents`), índices, funciones para actualización automática de marcas de tiempo (`updated_at`) y vistas de resumen (`vw_student_titling_summary`).
+- **`schema.sql`**: Script DDL base: roles, usuarios, facultades, carreras, estudiantes, periodos académicos, trámites y documentos, con índices, triggers de `updated_at` y vistas de resumen.
 - **`seed.sql`**: Datos iniciales de prueba (roles por defecto, usuarios administradores, coordinadores, asesores, estudiantes, proyectos y trámites de ejemplo).
 - **`queries.sql`**: Archivo con consultas SQL útiles, reportes y seguimiento de trámites para operaciones comunes.
 - **`connection.js`**: Módulo de conexión reutilizable en Node.js utilizando el paquete `pg` (Pool de conexiones).
-- **`migrations/`**: Cambios incrementales sobre una base ya creada (por ejemplo, `001_secretaria_catalogos_estudiantes.sql`: rol `SECRETARY`, tablas `faculties` y `careers`, y cédula/semestre/celular del estudiante).
+- **`migrations/`**: Cambios incrementales sobre una base ya creada, aplicados en orden por `setup.mjs`:
+  - `001`: rol `SECRETARY`, facultades, carreras y cédula/semestre/celular del estudiante.
+  - `002`/`003`: código de estudiante opcional y datos personales.
+  - `004`: registro PAT 2 (`pat_registrations`) y tribunales (`tribunals`).
+  - `005`: correos institucionales.
+  - `006`: PAT 2 en pareja (`pat_members`), firmas digitales, escaneado (`pat_scans`) e historial (`pat_events`).
+  - `007`: `users.token_version`, para revocar los tokens de la app al cambiar la contraseña.
 - **`setup.mjs`** (`npm run db:setup`): crea la base si no existe, carga `schema.sql` y `seed.sql` cuando está vacía y aplica las migraciones pendientes (registradas en `schema_migrations`).
 - **`set-password.mjs`** (`npm run db:password -- correo`): asigna una contraseña bcrypt a un usuario.
 
@@ -32,14 +38,15 @@ Si tu base ya existía con el esquema anterior, este comando solo aplica las mig
 
 ---
 
-### Opción A: Usando Docker y Docker Compose (Recomendado)
-Si tienes Docker instalado, puedes levantar la base de datos con los esquemas y semillas cargados automáticamente ejecutando en la raíz del proyecto (`Sistema-de-Gesti-n-de-Titulaci-n/`):
+### Opción A: PostgreSQL con Docker Compose (recomendado)
+`docker-compose.yml` solo levanta el servidor PostgreSQL (puerto `5432`, base `sistema_titulacion`).
+El esquema, los datos iniciales y **todas** las migraciones los carga `npm run db:setup`,
+que además registra cada migración en `schema_migrations` para no repetirla:
 
 ```bash
 docker compose up -d
+npm run db:setup
 ```
-
-Esto levantará un contenedor PostgreSQL en el puerto `5432`, creando la base de datos `sistema_titulacion` y ejecutando `schema.sql` y `seed.sql` automáticamente.
 
 Para detener el contenedor:
 ```bash
@@ -48,20 +55,11 @@ docker compose down
 
 ---
 
-### Opción B: Configuración Manual (PostgreSQL Local)
-
-#### 1. Crear la Base de Datos en PostgreSQL
-Abre tu cliente de PostgreSQL (psql, pgAdmin o DBeaver) y ejecuta:
-```sql
-CREATE DATABASE sistema_titulacion;
-```
-
-#### 2. Ejecutar el Esquema y Semilla
-Conéctate a la base de datos `sistema_titulacion` y ejecuta los scripts:
-```bash
-psql -U postgres -d sistema_titulacion -f schema.sql
-psql -U postgres -d sistema_titulacion -f seed.sql
-```
+### Opción B: PostgreSQL instalado localmente
+Con el servidor en marcha y las variables `DB_*` en `.env.local`, basta con `npm run db:setup`
+(crea la base si no existe). Si prefieres hacerlo a mano, ejecuta en orden `schema.sql`,
+`seed.sql` y cada archivo de `migrations/` por número, y registra cada uno en `schema_migrations`;
+si no, `db:setup` intentará aplicarlos de nuevo más adelante.
 
 ---
 
