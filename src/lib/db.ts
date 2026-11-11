@@ -10,8 +10,14 @@ const pool =
     port: Number(process.env.DB_PORT || 5432),
     database: process.env.DB_NAME || "sistema_titulacion",
     user: process.env.DB_USER || "postgres",
-    password: process.env.DB_PASSWORD || "postgres",
-    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+    // La contraseña "postgres" solo se asume en desarrollo; en producción debe configurarse.
+    password: process.env.DB_PASSWORD || (process.env.NODE_ENV === "production" ? undefined : "postgres"),
+    // Con SSL se verifica el certificado del servidor. Solo para servidores con
+    // certificado autofirmado: DB_SSL_ALLOW_SELF_SIGNED=true.
+    ssl:
+      process.env.DB_SSL === "true"
+        ? { rejectUnauthorized: process.env.DB_SSL_ALLOW_SELF_SIGNED !== "true" }
+        : false,
     max: 10,
   });
 

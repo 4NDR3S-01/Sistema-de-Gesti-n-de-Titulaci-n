@@ -71,7 +71,7 @@ export async function verifyCredentials(
     return reject("no tiene contraseña asignada (usa npm run db:password)");
   }
   if (!(await bcrypt.compare(password, user.password_hash))) {
-    return reject(`contraseña incorrecta (${password.length} caracteres)`);
+    return reject("contraseña incorrecta");
   }
 
   clearSuccessfulLogin(throttleId);
