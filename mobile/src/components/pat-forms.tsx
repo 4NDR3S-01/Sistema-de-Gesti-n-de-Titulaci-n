@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { View } from "react-native";
-import { User, Users } from "lucide-react-native";
-import { Banner, Choice, DateField, Field, Input, Select, T } from "@/components/ui";
+import * as ImagePicker from "expo-image-picker";
+import { extractTextFromImage, isSupported as ocrSupported } from "expo-text-extractor";
+import { IdCard, ImageUp, User, Users } from "lucide-react-native";
+import { Banner, Button, Choice, DateField, Field, Input, Select, T } from "@/components/ui";
 import type { FieldErrors } from "@/lib/api";
+import { parseCedula, type CedulaData } from "@/lib/cedula";
 import { ageFrom } from "@/lib/format";
 import { colors } from "@/lib/theme";
 import type { Catalog } from "@/lib/types";
@@ -171,6 +174,92 @@ export function PersonalFields({ catalog, values, set, errors }: { catalog: Cata
             </Field>
           </View>
         </View>
+      ) : null}
+    </View>
+  );
+}
+
+const scanLabels: { key: keyof CedulaData; label: string }[] = [
+  { key: "birthDate", label: "Fecha de nacimiento" },
+  { key: "nationality", label: "Nacionalidad" },
+  { key: "maritalStatus", label: "Estado civil" },
+];
+
+/**
+ * Lee la cédula con el OCR del teléfono (la foto no se envía a ningún servidor) y
+ * completa los datos informativos que aparecen en ella. El estudiante los revisa antes de guardar.
+ */
+export function CedulaScanner({ expectedCedula, onData }: { expectedCedula?: string | null; onData: (data: CedulaData) => void }) {
+  const [found, setFound] = useState<CedulaData>({});
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  if (!ocrSupported) return null;
+
+  const scan = async (source: "camera" | "library") => {
+    setProblem(null);
+    if (source === "camera") {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        setProblem("Activa el permiso de cámara en los ajustes del teléfono para escanear tu cédula.");
+        return;
+      }
+    }
+    const options: ImagePicker.ImagePickerOptions = { mediaTypes: ["images"], quality: 1 };
+    const result = source === "camera" ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options);
+    if (result.canceled) return;
+
+    setBusy(true);
+    try {
+      const data = parseCedula(await extractTextFromImage(result.assets[0].uri));
+      if (data.cedula && expectedCedula && data.cedula !== expectedCedula) {
+        setProblem(`La cédula de la foto (${data.cedula}) no es la de tu ficha. Escanea tu propia cédula.`);
+        return;
+      }
+      const useful = Object.fromEntries(scanLabels.filter(({ key }) => data[key]).map(({ key }) => [key, data[key]])) as CedulaData;
+      if (Object.keys(useful).length === 0) {
+        setProblem("No pudimos leer los datos. Toma la foto de cerca, con buena luz, sin reflejos y con la cédula completa en el cuadro.");
+        return;
+      }
+      setFound((prev) => ({ ...prev, ...useful }));
+      onData(useful);
+    } catch {
+      setProblem("No se pudo leer la imagen. Inténtalo de nuevo.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const filled = scanLabels.filter(({ key }) => found[key]);
+  const missing = scanLabels.filter(({ key }) => !found[key]);
+
+  return (
+    <View style={{ gap: 10 }}>
+      <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+        <IdCard color={colors.uleam} size={22} />
+        <View style={{ flex: 1 }}>
+          <T variant="label">Llénalo con tu cédula</T>
+          <T variant="small">Fotografía tu cédula y completamos fecha de nacimiento, nacionalidad y estado civil. La foto no sale de tu teléfono.</T>
+        </View>
+      </View>
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        <Button
+          title={filled.length ? "Escanear el otro lado" : "Escanear cédula"}
+          icon={IdCard}
+          variant="secondary"
+          loading={busy}
+          onPress={() => void scan("camera")}
+          style={{ flex: 1 }}
+        />
+        <Button title="" accessibilityLabel="Elegir una foto de la galería" icon={ImageUp} variant="secondary" disabled={busy} onPress={() => void scan("library")} />
+      </View>
+      {problem ? <Banner tone="warning">{problem}</Banner> : null}
+      {filled.length ? (
+        <Banner tone="success" title="Datos tomados de tu cédula">
+          {`${filled.map(({ label }) => label).join(", ")}. Revísalos abajo.${
+            missing.length ? ` Para ${missing.map(({ label }) => label.toLowerCase()).join(" y ")}, escanea el otro lado o complétalo a mano.` : ""
+          }`}
+        </Banner>
       ) : null}
     </View>
   );

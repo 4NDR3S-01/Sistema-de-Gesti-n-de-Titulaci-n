@@ -132,6 +132,17 @@ export async function getActiveMembership(
   return row ?? null;
 }
 
+/** Los últimos datos informativos que el estudiante llenó en cualquier registro (incluso uno anterior). */
+export async function getLatestExtraData(studentId: number): Promise<PatExtraData | null> {
+  const [row] = await query<{ extra_data: PatExtraData }>(
+    `SELECT extra_data FROM pat_members
+     WHERE student_id = $1 AND extra_data <> '{}'::jsonb
+     ORDER BY id DESC LIMIT 1`,
+    [studentId],
+  );
+  return row?.extra_data ?? null;
+}
+
 export async function getPatDetail(registrationId: number): Promise<PatDetail | null> {
   const [registration] = await query<PatRegistration>(`${registrationSelect} WHERE r.id = $1`, [
     registrationId,

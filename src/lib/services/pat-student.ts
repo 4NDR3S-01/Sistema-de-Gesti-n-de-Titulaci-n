@@ -6,6 +6,7 @@ import {
   deleteDraft,
   deleteScan,
   getActiveMembership,
+  getLatestExtraData,
   inviteTeammate,
   leaveRegistration,
   removeSignature,
@@ -18,6 +19,8 @@ import {
   updateProposal,
 } from "@/lib/data/pat";
 import { getStudentByUserId, type StudentRow } from "@/lib/data/students";
+import { personalDefaults } from "@/lib/pat-defaults";
+import type { PatExtraData } from "@/lib/pat-options";
 import { failure, invalid, success, type ServiceResult } from "@/lib/services/result";
 import { patPersonalSchema, patProposalSchema } from "@/lib/validation";
 
@@ -81,6 +84,14 @@ export async function editProposal(user: CurrentUser, input: Record<string, unkn
   const proposal = patProposalSchema.safeParse(proposalInput(input));
   if (!proposal.success) return invalid(proposal.error.flatten().fieldErrors);
   return (await updateProposal(membership.registration_id, student.id, user.id, proposal.data)) ? success() : NOT_EDITABLE;
+}
+
+/** Datos informativos para prellenar el formato: lo guardado antes y lo que se deduce de la ficha. */
+export async function getPersonalDefaults(user: CurrentUser): Promise<ServiceResult<PatExtraData>> {
+  const ctx = await context(user);
+  if (!ctx.ok) return ctx;
+  const { student } = ctx.data;
+  return success(personalDefaults(student.semester, await getLatestExtraData(student.id)));
 }
 
 export async function editPersonal(user: CurrentUser, input: Record<string, unknown>): Promise<ServiceResult> {

@@ -1,7 +1,8 @@
+import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { Save } from "lucide-react-native";
 import { FormScreen } from "@/components/form-screen";
-import { FormError, PersonalFields, ProposalFields } from "@/components/pat-forms";
+import { CedulaScanner, FormError, PersonalFields, ProposalFields } from "@/components/pat-forms";
 import { Button, Card, Loading, T } from "@/components/ui";
 import { useCatalog } from "@/hooks/use-catalog";
 import { useForm } from "@/hooks/use-form";
@@ -15,10 +16,21 @@ const toPayload = (values: Record<string, string>) => ({
 
 export default function CreatePat() {
   const catalog = useCatalog();
-  const { refresh } = useAuth();
+  const { me, refresh } = useAuth();
   const form = useForm({ participationType: "INDIVIDUAL", nationality: "Ecuatoriana", province: "Manabí" });
+  const [prefilled, setPrefilled] = useState(false);
+  const { setValues } = form;
 
-  if (!catalog) return <Loading />;
+  // Prellena los datos informativos con lo que el sistema ya sabe (ficha y registros anteriores).
+  useEffect(() => {
+    api
+      .get<Record<string, string>>("/api/v1/pat/personal")
+      .then((defaults) => setValues((current) => ({ ...current, ...defaults })))
+      .catch(() => undefined)
+      .finally(() => setPrefilled(true));
+  }, [setValues]);
+
+  if (!catalog || !prefilled) return <Loading />;
 
   return (
     <FormScreen
@@ -45,7 +57,8 @@ export default function CreatePat() {
       </Card>
       <Card style={{ gap: 14 }}>
         <T variant="heading">Tus datos informativos</T>
-        <T variant="small">Datos del formato oficial que no están en tu ficha. Cada integrante completa los suyos.</T>
+        <T variant="small">Datos del formato oficial. Llenamos lo que ya conocemos de tu ficha; revisa y completa el resto. Cada integrante completa los suyos.</T>
+        <CedulaScanner expectedCedula={me?.student?.cedula} onData={(data) => Object.entries(data).forEach(([k, v]) => v && form.set(k, v))} />
         <PersonalFields catalog={catalog} values={form.values} set={form.set} errors={form.errors} />
       </Card>
     </FormScreen>

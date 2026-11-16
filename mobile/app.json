@@ -42,8 +42,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "La app usa tus fotos para escanear la imagen de tu firma.",
-          "cameraPermission": "La app usa la cámara para fotografiar tu firma en una hoja blanca.",
+          "photosPermission": "La app usa tus fotos para escanear tu firma o tu cédula.",
+          "cameraPermission": "La app usa la cámara para fotografiar tu firma y tu cédula.",
           "microphonePermission": false
         }
       ],

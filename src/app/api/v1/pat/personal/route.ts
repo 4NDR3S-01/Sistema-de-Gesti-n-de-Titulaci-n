@@ -1,5 +1,13 @@
 import { fail, handler, ok, readJson, requireApiUser } from "@/lib/api/http";
-import { editPersonal } from "@/lib/services/pat-student";
+import { editPersonal, getPersonalDefaults } from "@/lib/services/pat-student";
+
+/** Valores con los que la app prellena los datos informativos del formato. */
+export const GET = handler(async (request: Request) => {
+  const user = await requireApiUser(request, ["STUDENT"]);
+  if (user instanceof Response) return user;
+  const result = await getPersonalDefaults(user);
+  return result.ok ? ok(result.data) : fail(result);
+});
 
 export const PUT = handler(async (request: Request) => {
   const user = await requireApiUser(request, ["STUDENT"]);
