@@ -19,8 +19,8 @@ export type PatDocumentData = {
   registrationId: number;
   version: string;
   participationType: "INDIVIDUAL" | "GRUPAL";
+  approvalOption: string;
   modality: string;
-  presentationMechanism: string;
   requestedTutor?: string | null;
   title: string;
   problem: string;

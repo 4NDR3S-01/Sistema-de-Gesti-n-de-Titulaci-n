@@ -37,8 +37,16 @@ export function ProposalSummary({ detail }: { detail: PatDetail }) {
     <>
       <section className="review-section">
         <p className="text-muted" style={{ fontSize: 14 }}>
+          {r.approval_option}
+        </p>
+        <p className="text-muted" style={{ fontSize: 14 }}>
           {r.modality}
         </p>
+        {r.legacy_modality ? (
+          <p className="text-muted" style={{ fontSize: 13 }}>
+            Modalidad anterior: {r.legacy_modality}
+          </p>
+        ) : null}
         <p className="review-title" style={{ marginTop: 6 }}>
           {r.title}
         </p>
@@ -50,14 +58,10 @@ export function ProposalSummary({ detail }: { detail: PatDetail }) {
       <section className="review-section">
         <dl className="readonly-grid">
           <div>
-            <dt>Desarrollo</dt>
-            <dd>{r.participation_type === "GRUPAL" ? "En pareja" : "Individual"}</dd>
+            <dt>Mecanismo de desarrollo y presentación</dt>
+            <dd>{r.participation_type === "GRUPAL" ? "Grupal" : "Individual"}</dd>
           </div>
           <div>
-            <dt>Mecanismo</dt>
-            <dd>{r.presentation_mechanism}</dd>
-          </div>
-          <div className="is-wide">
             <dt>Tutor/a sugerido/a</dt>
             <dd>{r.requested_tutor || <span className="text-muted">Sin sugerencia</span>}</dd>
           </div>

@@ -5,8 +5,8 @@ import {
   disabilityTypes,
   ecuadorProvinces,
   maritalStatuses,
+  patApprovalOptions,
   patLevels,
-  patMechanisms,
   patModalities,
   patParallels,
 } from "@/lib/pat-options";
@@ -314,9 +314,9 @@ export type PatPersonalInput = z.infer<typeof patPersonalSchema>;
 /** Propuesta compartida por los integrantes (modalidad, tema y problemática). */
 export const patProposalSchema = z
   .object({
+    approvalOption: oneOf(patApprovalOptions, "Selecciona la opción de aprobación previo a titulación."),
     modality: oneOf(patModalities, "Selecciona la modalidad."),
-    participationType: oneOf(["INDIVIDUAL", "GRUPAL"] as const, "Selecciona el tipo de desarrollo."),
-    presentationMechanism: oneOf(patMechanisms, "Selecciona el mecanismo de desarrollo."),
+    participationType: oneOf(["INDIVIDUAL", "GRUPAL"] as const, "Selecciona el mecanismo de desarrollo y presentación."),
     requestedTutor: optionalText(150, "El nombre del tutor/a"),
     title: z.preprocess(
       emptyToUndefined,

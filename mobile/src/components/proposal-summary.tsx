@@ -15,7 +15,9 @@ export function ProposalSummary({ registration: r, collapsed }: { registration: 
   return (
     <View style={{ gap: 12 }}>
       <View style={{ gap: 4 }}>
+        <T variant="small">{r.approval_option}</T>
         <T variant="small">{r.modality}</T>
+        {r.legacy_modality ? <T variant="caption">Modalidad anterior: {r.legacy_modality}</T> : null}
         <T variant="heading">{r.title}</T>
       </View>
       <View style={{ gap: 4 }}>
@@ -25,8 +27,7 @@ export function ProposalSummary({ registration: r, collapsed }: { registration: 
         </T>
       </View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        <Tag text={r.participation_type === "GRUPAL" ? "En pareja" : "Individual"} />
-        <Tag text={r.presentation_mechanism} />
+        <Tag text={r.participation_type === "GRUPAL" ? "Grupal" : "Individual"} />
         {r.articulations.map((value) => (
           <Tag key={value} text={articulationLabels[value] ?? value} />
         ))}

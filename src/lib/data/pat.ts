@@ -18,9 +18,10 @@ export type { PatStatus } from "@/lib/pat-rules";
 export type PatRegistration = {
   id: number;
   student_id: number; // quien creó el registro
+  approval_option: string;
   modality: string;
+  legacy_modality: string | null;
   participation_type: "INDIVIDUAL" | "GRUPAL";
-  presentation_mechanism: string;
   requested_tutor: string | null;
   title: string;
   problem: string;
@@ -93,8 +94,9 @@ const activeMembers = `(SELECT string_agg(mu.name || ' ' || mu.lastname, ' y ' O
      WHERE m.registration_id = r.id AND m.status <> 'DECLINED')`;
 
 const registrationSelect = `
-  SELECT r.id, r.student_id, r.modality, r.participation_type, r.presentation_mechanism,
-         r.requested_tutor, r.title, r.problem, r.articulations, r.status, r.observations,
+  SELECT r.id, r.student_id, r.approval_option, r.modality, r.legacy_modality,
+         r.participation_type, r.requested_tutor, r.title, r.problem, r.articulations,
+         r.status, r.observations,
          r.reviewed_at, r.submitted_at, r.created_at, r.updated_at,
          rev.name || ' ' || rev.lastname AS reviewer_name,
          c.name AS career, f.name AS faculty,
@@ -357,9 +359,9 @@ function personalData(data: PatPersonalInput): PatExtraData {
 }
 
 const proposalValues = (data: PatProposalInput) => [
+  data.approvalOption,
   data.modality,
   data.participationType,
-  data.presentationMechanism,
   data.requestedTutor ?? null,
   data.title,
   data.problem,
@@ -376,7 +378,7 @@ export async function createRegistration(
   return withTransaction(async (client) => {
     const { rows } = await client.query<{ id: number }>(
       `INSERT INTO pat_registrations
-         (student_id, modality, participation_type, presentation_mechanism, requested_tutor,
+         (student_id, approval_option, modality, participation_type, requested_tutor,
           title, problem, articulations, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'DRAFT')
        RETURNING id`,
@@ -405,7 +407,7 @@ export async function updateProposal(
 
     await client.query(
       `UPDATE pat_registrations
-       SET modality = $1, participation_type = $2, presentation_mechanism = $3, requested_tutor = $4,
+       SET approval_option = $1, modality = $2, participation_type = $3, requested_tutor = $4,
            title = $5, problem = $6, articulations = $7
        WHERE id = $8`,
       [...proposalValues(proposal), registrationId],

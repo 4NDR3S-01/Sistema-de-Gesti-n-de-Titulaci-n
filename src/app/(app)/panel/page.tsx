@@ -138,10 +138,10 @@ function studentJourney(student: StudentRow, detail: Detail | null, tribunal: Tr
       detail: invited
         ? "Tienes una invitación"
         : !r
-          ? "Modalidad, tema y problemática"
+          ? "Opción de aprobación, modalidad y tema"
           : r.participation_type === "GRUPAL"
             ? teamReady
-              ? "En pareja, equipo listo"
+              ? "Grupal, equipo listo"
               : "Esperando a tu compañero/a"
             : "Individual",
       state: invited ? "current" : r && teamReady ? "done" : r || profileComplete ? "current" : "upcoming",

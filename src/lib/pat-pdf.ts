@@ -398,7 +398,8 @@ class PatPdf {
   private approvalTable() {
     const { doc } = this;
     const widths = [10, 62.6, 57.5, 44.9];
-    const complexivo = isComplexivo(this.data.modality);
+    const selected = this.data.approvalOption || "Trabajo de Integración Curricular";
+    const complexivo = isComplexivo(selected);
     const modality = this.data.modality.replace(/^Trabajo de Integración Curricular\s*-\s*/i, "");
     const x0 = MARGIN;
     const headerH = 16.4;
@@ -429,57 +430,78 @@ class PatPdf {
     });
     this.y += headerH;
 
-    const row1: ApprovalCell[] = [
-      { text: "1", w: widths[0], size: 10, align: "center" },
-      { text: "Trabajo de Integración Curricular", w: widths[1], bold: false, size: 10 },
-      {
-        text: complexivo ? "" : modality,
-        w: widths[2],
-        bold: false,
-        size: 10,
-      },
-      {
-        text: complexivo ? "" : this.data.title,
-        w: widths[3],
-        size: 10,
-      },
-    ];
-    const row1Lines = row1.map((cell) =>
-      this.wrap(cell.text, cell.w - 3.6, cell.bold === false ? "normal" : "bold", cell.size ?? 9),
-    );
-    const row1H = Math.max(6.2, 2.4 + Math.max(...row1Lines.map((lines) => lines.length)) * LINE);
-    doc.rect(x0, this.y, CONTENT_W, row1H);
-    x = x0;
-    row1.forEach((cell, index) => {
-      if (index > 0) doc.line(x, this.y, x, this.y + row1H);
-      this.approvalCell(x, this.y, cell, row1H);
-      x += cell.w;
-    });
-    this.y += row1H;
+    type ApprovalRow = {
+      no: string;
+      label: string;
+      modality: string;
+      title: string;
+      minHeight: number;
+      top?: boolean;
+    };
 
-    const row2: ApprovalCell[] = [
-      { text: "2", w: widths[0], size: 10, align: "center" },
-      { text: "Examen de carácter complexivo", w: widths[1], bold: false, size: 10 },
-      { text: "No Aplica.", w: widths[2], bold: false, size: 10, valign: "top" },
+    const rows: ApprovalRow[] = [
       {
-        text: complexivo ? this.data.title : "",
-        w: widths[3],
-        size: 10,
-        valign: "top",
+        no: "1",
+        label: "Trabajo de Integración Curricular",
+        modality: selected === "Trabajo de Integración Curricular" ? modality : "",
+        title: selected === "Trabajo de Integración Curricular" ? this.data.title : "",
+        minHeight: 6.2,
+      },
+      {
+        no: "2",
+        label: "Examen de carácter complexivo",
+        modality: "No Aplica.",
+        title: complexivo ? this.data.title : "",
+        minHeight: 20.3,
+        top: true,
       },
     ];
-    const row2Lines = row2.map((cell) =>
-      this.wrap(cell.text, cell.w - 3.6, cell.bold === false ? "normal" : "bold", cell.size ?? 9),
-    );
-    const row2H = Math.max(20.3, 2.4 + Math.max(...row2Lines.map((lines) => lines.length)) * LINE);
-    doc.rect(x0, this.y, CONTENT_W, row2H);
-    x = x0;
-    row2.forEach((cell, index) => {
-      if (index > 0) doc.line(x, this.y, x, this.y + row2H);
-      this.approvalCell(x, this.y, cell, row2H);
-      x += cell.w;
-    });
-    this.y += row2H;
+
+    if (selected === "Trabajo de titulación" || selected === "NA") {
+      rows.push({
+        no: "3",
+        label: selected,
+        modality,
+        title: this.data.title,
+        minHeight: 10,
+        top: true,
+      });
+    }
+
+    for (const row of rows) {
+      const cells: ApprovalCell[] = [
+        { text: row.no, w: widths[0], size: 10, align: "center" },
+        { text: row.label, w: widths[1], bold: false, size: 10 },
+        {
+          text: row.modality,
+          w: widths[2],
+          bold: false,
+          size: 10,
+          valign: row.top ? "top" : "middle",
+        },
+        {
+          text: row.title,
+          w: widths[3],
+          size: 10,
+          valign: row.top ? "top" : "middle",
+        },
+      ];
+      const lines = cells.map((cell) =>
+        this.wrap(cell.text, cell.w - 3.6, cell.bold === false ? "normal" : "bold", cell.size ?? 9),
+      );
+      const height = Math.max(
+        row.minHeight,
+        2.4 + Math.max(...lines.map((item) => item.length)) * LINE,
+      );
+      doc.rect(x0, this.y, CONTENT_W, height);
+      x = x0;
+      cells.forEach((cell, index) => {
+        if (index > 0) doc.line(x, this.y, x, this.y + height);
+        this.approvalCell(x, this.y, cell, height);
+        x += cell.w;
+      });
+      this.y += height;
+    }
   }
 
   /* -------------------------------------------------------------- Problemática */
@@ -590,8 +612,7 @@ class PatPdf {
     this.y += inquiryH;
 
     const answerH = 8.1;
-    const participation = this.data.participationType === "GRUPAL" ? "En pareja" : "Individual";
-    const answer = `${participation} — Mecanismo: ${this.data.presentationMechanism}`;
+    const answer = this.data.participationType === "GRUPAL" ? "Grupal" : "Individual";
     doc.rect(MARGIN, this.y, CONTENT_W, answerH);
     this.font("normal", 9);
     doc.text(answer, MARGIN + DATA_PAD, this.y + 5.3);

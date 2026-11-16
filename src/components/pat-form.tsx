@@ -10,9 +10,9 @@ import {
   disabilityTypes,
   ecuadorProvinces,
   maritalStatuses,
+  patApprovalOptions,
   patArticulations,
   patLevels,
-  patMechanisms,
   patModalities,
   patParallels,
 } from "@/lib/pat-options";
@@ -157,6 +157,18 @@ function ProposalFields({
 
   return (
     <div className="form-grid">
+      <Field
+        label="Opción de aprobación previo a titulación"
+        name="approvalOption"
+        error={errors.approvalOption}
+        className="field-full"
+        required
+      >
+        <select id="approvalOption" name="approvalOption" defaultValue={value("approvalOption")} required>
+          <Options values={patApprovalOptions} placeholder="Selecciona la opción de aprobación" />
+        </select>
+      </Field>
+
       <Field label="Modalidad" name="modality" error={errors.modality} className="field-full" required>
         <select id="modality" name="modality" defaultValue={value("modality")} required>
           <Options values={patModalities} placeholder="Selecciona la modalidad" />
@@ -165,12 +177,12 @@ function ProposalFields({
 
       <div className="field field-full" role="radiogroup" aria-labelledby="participation-label">
         <span className="field-label" id="participation-label">
-          Tipo de desarrollo <span className="field-required" aria-hidden="true">*</span>
+          Mecanismo de desarrollo y presentación <span className="field-required" aria-hidden="true">*</span>
         </span>
         <div className="choice-segmented">
           {[
             ["INDIVIDUAL", "Individual", "Trabajas solo/a", User],
-            ["GRUPAL", "En pareja", "Con un compañero/a de tu carrera", Users],
+            ["GRUPAL", "Grupal", "Con un compañero/a de tu carrera", Users],
           ].map(([option, title, detail, Icon]) => {
             const IconComponent = Icon as typeof User;
             return (
@@ -201,11 +213,6 @@ function ProposalFields({
         )}
       </div>
 
-      <Field label="Mecanismo de desarrollo" name="presentationMechanism" error={errors.presentationMechanism} required>
-        <select id="presentationMechanism" name="presentationMechanism" defaultValue={value("presentationMechanism")} required>
-          <Options values={patMechanisms} placeholder="Selecciona el mecanismo" />
-        </select>
-      </Field>
       <Field label="Tutor/a sugerido/a" name="requestedTutor" error={errors.requestedTutor} hint="Opcional.">
         <input id="requestedTutor" name="requestedTutor" defaultValue={value("requestedTutor")} maxLength={150} placeholder="Nombre del docente" />
       </Field>
@@ -269,7 +276,7 @@ export function PatCreateForm({ action }: { action: Action }) {
       <FormMessage state={state} />
       <fieldset className="form-group">
         <GroupIntro title="Propuesta">
-          Modalidad, tema y problemática. Si trabajas en pareja, tu compañero/a verá esta misma propuesta.
+          Opción de aprobación, modalidad, tema y problemática. Si trabajas en grupo, tu compañero/a verá esta misma propuesta.
         </GroupIntro>
         <ProposalFields value={value} errors={errors} />
       </fieldset>

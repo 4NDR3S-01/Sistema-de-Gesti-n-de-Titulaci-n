@@ -59,9 +59,10 @@ export type ExtraData = Partial<{
 export type Registration = {
   id: number;
   student_id: number;
+  approval_option: string;
   modality: string;
+  legacy_modality: string | null;
   participation_type: "INDIVIDUAL" | "GRUPAL";
-  presentation_mechanism: string;
   requested_tutor: string | null;
   title: string;
   problem: string;
@@ -157,8 +158,8 @@ export type PatDetail = {
 };
 
 export type Catalog = {
+  approvalOptions: string[];
   modalities: string[];
-  mechanisms: string[];
   articulations: { value: string; label: string }[];
   levels: string[];
   parallels: string[];
