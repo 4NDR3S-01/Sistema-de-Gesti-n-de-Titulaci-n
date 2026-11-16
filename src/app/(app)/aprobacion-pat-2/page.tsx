@@ -113,7 +113,7 @@ export default async function PatApprovalPage(props: PageProps<"/aprobacion-pat-
                       <td data-label="Tema" className="cell-title">
                         <strong>{row.title}</strong>
                         <small>
-                          {row.participation_type === "GRUPAL" ? "En pareja" : "Individual"}
+                          {row.participation_type === "GRUPAL" ? "Grupal" : "Individual"}
                           {" · "}
                           {row.has_scan ? "Escaneado firmado" : "Firma digital"}
                         </small>

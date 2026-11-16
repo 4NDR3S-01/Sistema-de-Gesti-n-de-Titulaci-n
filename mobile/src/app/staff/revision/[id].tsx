@@ -121,7 +121,7 @@ export default function Review() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <Badge tone={statusTone(r.status)}>{statusLabel(r.status)}</Badge>
           <T variant="small">
-            {r.participation_type === "GRUPAL" ? "En pareja" : "Individual"} · enviado {dateTime(r.submitted_at)}
+            {r.participation_type === "GRUPAL" ? "Grupal" : "Individual"} · enviado {dateTime(r.submitted_at)}
           </T>
         </View>
       </View>

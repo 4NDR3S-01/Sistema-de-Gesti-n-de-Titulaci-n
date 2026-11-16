@@ -31,7 +31,7 @@ export default async function PatReviewPage(props: PageProps<"/aprobacion-pat-2/
       <PageHeader
         eyebrow={`${r.career}, ${r.faculty}`}
         title={r.members_label}
-        description={`${r.participation_type === "GRUPAL" ? "Trabajo en pareja" : "Trabajo individual"}. Enviado el ${r.submitted_at ? shortDateTime(r.submitted_at) : "—"}`}
+        description={`${r.participation_type === "GRUPAL" ? "Trabajo grupal" : "Trabajo individual"}. Enviado el ${r.submitted_at ? shortDateTime(r.submitted_at) : "—"}`}
         actions={<Badge tone={patStatusTone(r.status)}>{patStatusLabel(r.status)}</Badge>}
       />
 

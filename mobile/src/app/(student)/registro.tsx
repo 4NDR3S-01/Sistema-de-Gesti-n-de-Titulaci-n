@@ -138,8 +138,8 @@ export default function Registro() {
           </View>
           <Card>
             {[
-              ["Propuesta", "Modalidad, tema y problemática."],
-              ["Integrantes", "Si es en pareja, invitas a tu compañero/a y acepta."],
+              ["Propuesta", "Opción de aprobación, modalidad, tema y problemática."],
+              ["Integrantes", "Si es grupal, invitas a tu compañero/a y acepta."],
               ["Firmas", "Cada uno firma en pantalla, con una foto o con el PDF escaneado."],
               ["Envío", "Secretaría aprueba o devuelve con observaciones."],
             ].map(([title, detail], index) => (

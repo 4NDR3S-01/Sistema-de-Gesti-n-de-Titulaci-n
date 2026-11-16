@@ -42,18 +42,28 @@ export function ProposalFields({
 
   return (
     <View style={{ gap: 16 }}>
+      <Field label="Opción de aprobación previo a titulación" required error={err(errors, "approvalOption")}>
+        <Select
+          title="Opción de aprobación previo a titulación"
+          value={values.approvalOption ?? ""}
+          options={catalog.approvalOptions}
+          onChange={(v) => set("approvalOption", v)}
+          invalid={Boolean(err(errors, "approvalOption"))}
+        />
+      </Field>
+
       <Field label="Modalidad" required error={err(errors, "modality")}>
         <Select title="Modalidad" value={values.modality ?? ""} options={catalog.modalities} onChange={(v) => set("modality", v)} invalid={Boolean(err(errors, "modality"))} />
       </Field>
 
       <View style={{ gap: 8 }}>
         <T variant="label">
-          Tipo de desarrollo <T variant="label" color={colors.danger}>*</T>
+          Mecanismo de desarrollo y presentación <T variant="label" color={colors.danger}>*</T>
         </T>
         <View style={{ flexDirection: "row", gap: 8 }}>
           {[
             { value: "INDIVIDUAL", label: "Individual", detail: "Trabajas solo/a", icon: User },
-            { value: "GRUPAL", label: "En pareja", detail: "Con un compañero/a", icon: Users },
+            { value: "GRUPAL", label: "Grupal", detail: "Con un compañero/a", icon: Users },
           ].map((option) => (
             <View key={option.value} style={{ flex: 1 }}>
               <Choice type="radio" selected={(values.participationType || "INDIVIDUAL") === option.value} onPress={() => set("participationType", option.value)} title={option.label} subtitle={option.detail} />
@@ -68,9 +78,6 @@ export function ProposalFields({
         ) : null}
       </View>
 
-      <Field label="Mecanismo de desarrollo" required error={err(errors, "presentationMechanism")}>
-        <Select title="Mecanismo de desarrollo" value={values.presentationMechanism ?? ""} options={catalog.mechanisms} onChange={(v) => set("presentationMechanism", v)} invalid={Boolean(err(errors, "presentationMechanism"))} />
-      </Field>
       <Field label="Tutor/a sugerido/a" hint="Opcional." error={err(errors, "requestedTutor")}>
         <Input value={values.requestedTutor ?? ""} onChangeText={(v) => set("requestedTutor", v)} placeholder="Nombre del docente" maxLength={150} />
       </Field>

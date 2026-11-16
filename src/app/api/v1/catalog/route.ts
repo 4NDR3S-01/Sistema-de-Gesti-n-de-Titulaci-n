@@ -3,9 +3,9 @@ import {
   disabilityTypes,
   ecuadorProvinces,
   maritalStatuses,
+  patApprovalOptions,
   patArticulations,
   patLevels,
-  patMechanisms,
   patModalities,
   patParallels,
 } from "@/lib/pat-options";
@@ -15,8 +15,8 @@ export const GET = handler(async (request: Request) => {
   const user = await requireApiUser(request);
   if (user instanceof Response) return user;
   return ok({
+    approvalOptions: patApprovalOptions,
     modalities: patModalities,
-    mechanisms: patMechanisms,
     articulations: patArticulations,
     levels: patLevels,
     parallels: patParallels,

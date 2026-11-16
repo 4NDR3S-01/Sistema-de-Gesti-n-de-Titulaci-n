@@ -21,9 +21,9 @@ export default function EditProposal() {
     if (!full) return;
     const r = full.registration;
     setValues({
+      approvalOption: r.approval_option,
       modality: r.modality,
       participationType: r.participation_type,
-      presentationMechanism: r.presentation_mechanism,
       requestedTutor: r.requested_tutor ?? "",
       title: r.title,
       problem: r.problem,
@@ -33,7 +33,7 @@ export default function EditProposal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [full?.registration.id]);
 
-  if (!catalog || !full || !form.values.modality) return <Loading />;
+  if (!catalog || !full || !form.values.approvalOption || !form.values.modality) return <Loading />;
   const signed = full.members.some((m) => m.signature) || Boolean(full.scan);
 
   return (

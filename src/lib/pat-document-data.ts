@@ -19,8 +19,8 @@ export function patDocumentData(detail: PatDetail, { withSignatures = true } = {
     registrationId: r.id,
     version: documentVersion(r.updated_at),
     participationType: r.participation_type,
+    approvalOption: r.approval_option,
     modality: r.modality,
-    presentationMechanism: r.presentation_mechanism,
     requestedTutor: r.requested_tutor,
     title: r.title,
     problem: r.problem,
@@ -47,9 +47,9 @@ export function patDocumentData(detail: PatDetail, { withSignatures = true } = {
 export function proposalFormValues(detail: PatDetail): Record<string, string> {
   const r = detail.registration;
   return {
+    approvalOption: r.approval_option,
     modality: r.modality,
     participationType: r.participation_type,
-    presentationMechanism: r.presentation_mechanism,
     requestedTutor: r.requested_tutor ?? "",
     title: r.title,
     problem: r.problem,

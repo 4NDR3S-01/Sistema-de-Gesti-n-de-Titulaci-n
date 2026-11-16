@@ -24,7 +24,7 @@ export function studentJourney(student: Student | null, pat: StudentPat | null) 
     { title: "Datos personales", detail: profileComplete ? "Completos" : "Faltan datos en tu ficha", state: profileComplete ? "done" : "current" },
     {
       title: "Propuesta",
-      detail: invited ? "Tienes una invitación" : !r ? "Modalidad, tema y problemática" : r.participation_type === "GRUPAL" ? (teamReady ? "En pareja, equipo listo" : "Esperando a tu compañero/a") : "Individual",
+      detail: invited ? "Tienes una invitación" : !r ? "Modalidad, tema y problemática" : r.participation_type === "GRUPAL" ? (teamReady ? "Grupal, equipo listo" : "Esperando a tu compañero/a") : "Individual",
       state: invited ? "current" : r && teamReady ? "done" : r || profileComplete ? "current" : "upcoming",
     },
     {

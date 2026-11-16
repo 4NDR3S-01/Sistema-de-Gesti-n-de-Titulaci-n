@@ -118,7 +118,7 @@ export async function removeDraft(user: CurrentUser): Promise<ServiceResult> {
 
 const inviteErrors: Record<string, ReturnType<typeof failure>> = {
   "not-editable": NOT_EDITABLE,
-  "not-group": failure(409, "not_group", "Para invitar a alguien, cambia la propuesta a «En pareja»."),
+  "not-group": failure(409, "not_group", "Para invitar a alguien, cambia el mecanismo de desarrollo y presentación a «Grupal»."),
   "invalid-teammate": failure(422, "invalid_teammate", "Ese estudiante no está disponible: debe estar activo y ser de tu carrera."),
   busy: failure(409, "teammate_busy", "Ese estudiante ya forma parte de otro registro PAT 2."),
 };

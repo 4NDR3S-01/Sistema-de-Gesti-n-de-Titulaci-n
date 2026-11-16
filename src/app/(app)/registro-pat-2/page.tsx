@@ -66,7 +66,7 @@ const errorMessages: Record<string, string> = {
   only_member: "Quien creó el registro no puede salir; puede eliminar el borrador.",
   not_editable: "El registro ya está en revisión o aprobado y no se puede modificar.",
   not_draft: "Solo se puede eliminar un registro en borrador.",
-  not_group: "Para invitar a alguien, cambia la propuesta a «En pareja».",
+  not_group: "Para invitar a alguien, cambia el mecanismo de desarrollo y presentación a «Grupal».",
   invalid_teammate: "Ese estudiante no está disponible: debe estar activo y ser de tu carrera.",
   teammate_busy: "Ese estudiante ya forma parte de otro registro PAT 2.",
   no_invitation: "La invitación ya no está disponible.",
@@ -143,7 +143,7 @@ export default async function PatRegistrationPage(props: PageProps<"/registro-pa
         <ol className="process-strip" aria-label="Cómo funciona">
           <li>
             <strong>Propuesta</strong>
-            <span>Modalidad, tema y problemática.</span>
+            <span>Opción de aprobación, modalidad, tema y problemática.</span>
           </li>
           <li>
             <strong>Integrantes</strong>
@@ -414,7 +414,7 @@ export default async function PatRegistrationPage(props: PageProps<"/registro-pa
             )}
             {isLeader && r.participation_type === "INDIVIDUAL" && (
               <p className="field-hint" style={{ marginTop: 10 }}>
-                Trabajo individual. Para hacerlo en pareja, edita la propuesta y elige «En pareja».
+                Trabajo individual. Para hacerlo grupal, edita la propuesta y elige «Grupal».
               </p>
             )}
             {!isLeader && (

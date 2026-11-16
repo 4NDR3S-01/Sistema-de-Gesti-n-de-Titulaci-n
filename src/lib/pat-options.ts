@@ -1,20 +1,37 @@
 /** Opciones del formato institucional PAT-04-F-002 (compartidas por cliente y servidor). */
 
-export const patModalities = [
-  "Trabajo de Integración Curricular - Proyecto de Investigación",
-  "Trabajo de Integración Curricular - Desarrollo Tecnológico / Software",
-  "Trabajo de Integración Curricular - Artículo Académico / Científico",
-  "Trabajo de Integración Curricular - Proyecto de Vinculación",
-  "Trabajo de Integración Curricular - Emprendimiento / Plan de Negocios",
-  "Examen de Carácter Complexivo",
+export const patApprovalOptions = [
+  "Trabajo de Integración Curricular",
+  "Examen de carácter complexivo",
+  "Trabajo de titulación",
+  "NA",
 ] as const;
 
-export const patMechanisms = [
-  "Proyecto de Investigación",
-  "Proyecto de Vinculación con la Sociedad",
-  "Artículo Académico / Científico",
-  "Desarrollo Tecnológico / Software",
-  "Examen Complexivo Teórico-Práctico",
+export const patModalities = [
+  "Análisis de casos",
+  "Desarrollo o Implementación de proceso, producto, servicio, patente, software.",
+  "Dispositivos tecnológicos",
+  "Emprendimientos",
+  "Ensayos o artículos académicos",
+  "Escritura de Artículo Científico o Capítulo de Libro",
+  "Estudio de caso",
+  "Estudios comparados",
+  "Etnografías",
+  "Modelos de negocios",
+  "Prácticas de investigación y/o intervención",
+  "Productos o presentaciones artísticas",
+  "Propuestas metodológicas",
+  "Propuestas tecnológicas",
+  "Proyecto de emprendimiento",
+  "Proyecto de inversión",
+  "Proyectos de investigación",
+  "Proyectos Integradores",
+  "Proyectos técnicos",
+  "Servicio social educativo",
+  "Sistematización de experiencias",
+  "TEFL Application Process",
+  "TEFL in Community Service (Servicio Social Comunitario)",
+  "Trabajos experimentales",
 ] as const;
 
 export const patArticulations = [
@@ -96,7 +113,8 @@ export type PatExtraData = {
   disabilityDegree?: string;
 };
 
-export const isComplexivo = (modality: string) => modality.includes("Complexivo");
+export const isComplexivo = (approvalOption: string) =>
+  approvalOption.toLowerCase().includes("complexivo");
 
 /** Edad en años cumplidos a partir de una fecha AAAA-MM-DD. */
 export function ageFrom(birthDate?: string | null): number | null {
