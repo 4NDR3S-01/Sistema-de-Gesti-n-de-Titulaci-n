@@ -73,10 +73,17 @@ export const api = {
   put: <T = { ok: true }>(path: string, body: unknown) => request<T>(path, { method: "PUT", body: JSON.stringify(body) }),
   del: <T = { ok: true }>(path: string) => request<T>(path, { method: "DELETE" }),
   /** Sube un archivo local como multipart/form-data. */
-  upload: <T = { ok: true }>(path: string, field: string, file: { uri: string; name: string; type: string }) => {
+  upload: async <T = { ok: true }>(path: string, field: string, file: { uri: string; name: string; type: string }) => {
+    // El fetch de Expo no acepta { uri } en FormData (lanza un error que parecía
+    // "sin conexión"): se lee el archivo y se envía como bytes.
+    let bytes: Uint8Array;
+    try {
+      bytes = new Uint8Array(await new File(file.uri).arrayBuffer());
+    } catch {
+      throw new ApiError(0, "file", "No se pudo leer el archivo. Inténtalo de nuevo.");
+    }
     const form = new FormData();
-    // React Native acepta { uri, name, type } como archivo en FormData.
-    form.append(field, file as unknown as Blob);
+    form.append(field, { name: file.name, type: file.type, bytes: async () => bytes } as unknown as Blob);
     return request<T>(path, { method: "POST", body: form });
   },
 };

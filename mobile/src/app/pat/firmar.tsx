@@ -29,9 +29,22 @@ export default function Sign() {
   const [busy, setBusy] = useState<"process" | "save" | null>(null);
   const [error, setError] = useState("");
 
+  const canvasSize = useRef({ width: 0, height: 0 });
+
   const [responder] = useState(() => {
     // El trazo en curso vive en el cierre de los handlers y se refleja en estado para pintarlo.
     let stroke = "";
+    // locationX/Y se miden respecto a la vista que está bajo el dedo: si el dedo sale del
+    // recuadro (p. ej. hacia los botones), el punto saltaría. Se usa la posición en pantalla
+    // menos el origen del recuadro, y se limita a sus bordes.
+    let originX = 0;
+    let originY = 0;
+    const point = (pageX: number, pageY: number) => {
+      const { width, height } = canvasSize.current;
+      const x = Math.min(Math.max(pageX - originX, 0), width || Infinity);
+      const y = Math.min(Math.max(pageY - originY, 0), height || Infinity);
+      return `${x.toFixed(1)} ${y.toFixed(1)}`;
+    };
     const finish = () => {
       const finished = stroke;
       if (finished) setPaths((list) => [...list, finished]);
@@ -44,13 +57,17 @@ export default function Sign() {
       // Evita que el ScrollView de la pantalla robe el gesto a mitad de la firma.
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (event) => {
-        const { locationX, locationY } = event.nativeEvent;
-        stroke = `M${locationX.toFixed(1)} ${locationY.toFixed(1)}`;
+        // Al empezar, el dedo está sobre el recuadro (el SVG no recibe toques), así que
+        // locationX/Y es confiable para calcular dónde está el recuadro en la pantalla.
+        const { locationX, locationY, pageX, pageY } = event.nativeEvent;
+        originX = pageX - locationX;
+        originY = pageY - locationY;
+        stroke = `M${point(pageX, pageY)}`;
         setCurrent(stroke);
       },
       onPanResponderMove: (event) => {
-        const { locationX, locationY } = event.nativeEvent;
-        stroke += ` L${locationX.toFixed(1)} ${locationY.toFixed(1)}`;
+        const { pageX, pageY } = event.nativeEvent;
+        stroke += ` L${point(pageX, pageY)}`;
         setCurrent(stroke);
       },
       onPanResponderRelease: finish,
@@ -157,8 +174,18 @@ export default function Sign() {
       ) : mode === "draw" ? (
         <Card style={{ gap: 12 }}>
           <T variant="small">Firma con el dedo dentro del recuadro, como lo harías en papel.</T>
-          <View ref={canvasRef} collapsable={false} style={s.canvas} {...responder.panHandlers}>
-            <Svg style={StyleSheet.absoluteFill}>
+          <View
+            ref={canvasRef}
+            collapsable={false}
+            style={s.canvas}
+            onLayout={(event) => {
+              canvasSize.current = { width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height };
+            }}
+            {...responder.panHandlers}
+          >
+            {/* Sin toques en el SVG: si el dedo cae sobre un trazo, Android mide la posición
+                respecto a ese trazo y la línea salta. Así el destino siempre es el recuadro. */}
+            <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
               {[...paths, current].filter(Boolean).map((d, index) => (
                 <Path key={index} d={d} stroke={colors.harbor} strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
               ))}
